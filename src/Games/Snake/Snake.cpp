@@ -3,25 +3,27 @@
 //
 
 #include "Snake.h"
-#include <glm/vec2.hpp>
 #include <ctime>
 #include "debug.h"
+#include "SystemAdapter.h"
 
-auto field = glm::vec<2, unsigned int>(10,10);
 float tickSpeed = .4; // s
-unsigned short defaultSnakeSize = 4;
 
-float lastTickTime;
 void Snake::init() {
-    if (field.x <= 0 || field.y <= 0)
-    {
-        ErrorThrow("field.x <= 0 || field.y <= 0")
-    }
-    if (field.y != field.x)
-    {
-        Error("field.y != field.x, which is unsupported")
-    }
+    glfwSetWindowTitle(getwindow(), "Snake");
     Reset();
+    if (map->getField().x <= 0 || map->getField().y <= 0)
+    {
+        ErrorAbort("field.x <= 0 || field.y <= 0")
+    }
+    if (map->getField().y != map->getField().x)
+    {
+        ErrorAbort("field.y != field.x, which is unsupported")
+    }
+    if (map->getDefaultSnakeSize() < 2)
+    {
+        ErrorAbort("DefaultSnakeSize < 2")
+    }
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.1);
@@ -29,20 +31,33 @@ void Snake::init() {
 }
 void Snake::Reset() {
     isCrashed = false;
+    direction = Directions::Down;
     snake.clear();
-    direction = Directions::Right;
-    for (int i = 1; i < defaultSnakeSize + 1; ++i) {
+    for (int i = 1; i < map->getDefaultSnakeSize() + 1; ++i) {
         snake.emplace_back(1, i, Directions::Down);
     }
     ResetApple();
-    lastTickTime = ((float) clock() / CLOCKS_PER_SEC);
+    lastTickTime = 0;
 }
-void Snake::ResetApple() {
-    Apple = Coords(std::rand() % field.x + 1, std::rand() % field.y + 1);
+void Snake::ResetApple(unsigned short counter) {
+    counter--;
+    if (counter <= 0)
+    {
+        Apple = Coords(0);
+        Error("Cannot place Apple. The counter is over")
+        return;
+    }
+    Apple = Coords(std::rand() % map->getField().x + 1, std::rand() % map->getField().y + 1);
     for (auto& s : snake) {
         if (Apple == s)
         {
-            ResetApple();
+            ResetApple(counter);
+            return;
+        }
+    }
+    for (int i = 0; i < map->getMap().size(); ++i) {
+        if (map->getMap()[i] == SnakeMap::Wall && Apple == Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1)) {
+            ResetApple(counter);
             return;
         }
     }
@@ -50,33 +65,47 @@ void Snake::ResetApple() {
 
 
 void Snake::MoveSnake(SnakeBody to) {
-    auto dir = to.direction;
-
     auto tryTo = snake.front() + to;
     if (tryTo.x <= 0)
-        tryTo.x = field.x + 1;
+        tryTo.x = map->getField().x;
     else if (tryTo.y <= 0)
-        tryTo.y = field.y + 1;
-    else if (tryTo.y >= field.y + 1)
+        tryTo.y = map->getField().y;
+    else if (tryTo.y >= map->getField().y + 1)
         tryTo.y = 1;
-    else if (tryTo.x >= field.x + 1)
+    else if (tryTo.x >= map->getField().x + 1)
         tryTo.x = 1;
+    auto crash = [=](){
+        isCrashed = true;
+        switch (boxer::show("The snake crashed into an obstacle", "The snake crashed into an obstacle", boxer::Buttons::OKCancel)) {
+            case boxer::Selection::OK: {
+                Reset();
+                break;
+            }
+            case boxer::Selection::Cancel: {
+                loadMainMenu();
+                break;
+            }
+            default: {
+                Warning("You forgot to add case, in crashed snake dialog");
+                loadMainMenu();
+                break;
+            }
+        }
+        return;
+    };
+    for (int i = 0; i < map->getMap().size(); ++i) {
+        if (map->getMap()[i] == SnakeMap::Wall) {
+            if (CheckCollision(tryTo, Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1)))
+            {
+                crash();
+                return;
+            }
+        }
+    }
     for (auto& s : snake) {
         if (CheckCollision(tryTo, s))
         {
-            isCrashed = true;
-            switch (boxer::show("The snake crashed into an obstacle", "The snake crashed into an obstacle", boxer::Buttons::OKCancel)) {
-                case boxer::Selection::OK:
-                    Reset();
-                    break;
-                case boxer::Selection::Cancel:
-                    loadMainMenu();
-                    break;
-                default:
-                    Warning("You forgot to add case, in crashed snake dialog");
-                    loadMainMenu();
-                    break;
-            }
+            crash();
             return;
         }
     }
@@ -87,16 +116,15 @@ void Snake::MoveSnake(SnakeBody to) {
     } else {
         snake.pop_back();
     }
-    snake.emplace_front(tryTo.x, tryTo.y, dir);
+    snake.emplace_front(tryTo.x, tryTo.y, to.direction);
 }
 
 void Snake::loop() {
     glfwPollEvents();
     glClear(GL_COLOR_BUFFER_BIT);
-
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    for (int x = 1; x < field.x + 1; ++x) {
-        for (int y = 1; y < field.y + 1; ++y) {
+    for (int x = 1; x < map->getField().x + 1; ++x) {
+        for (int y = 1; y < map->getField().y + 1; ++y) {
             if (x%2==0)
             {
                 if (y%2==0)
@@ -116,8 +144,21 @@ void Snake::loop() {
             renderTile(Coords(x,y), {});
         }
     }
-
-
+    for (unsigned int i = 0; i < map->getMap().size(); ++i) {
+        switch (map->getMap()[i]) {
+            case SnakeMap::None:
+                break;
+            case SnakeMap::Wall: {
+                glColor4d(0, 0, 1., 1.);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1));
+                break;
+            }
+            default:
+                Warning("Cannot find tile type in render")
+                break;
+        }
+    }
     if (HeadTexture->initImage == 0) { glColor4d(1.,0,0, 1.); } else {glColor4d(1.,1.,1., 1.);}
     if (isCrashed){glColor4d(1.,1.,0, 1.);}
     glBindTexture(GL_TEXTURE_2D, HeadTexture->initImage);
@@ -247,6 +288,34 @@ void Snake::key_callback(int key, int scancode, int action, int mods) {
             case GLFW_KEY_D:
                 direction = Directions::Right;
                 break;
+            case GLFW_KEY_O: {
+                auto path =SystemAdapter::OpenFileDialog({{"Snake map", "smap"}},
+                                                         SystemAdapter::GetGameFolderName("Snake"));
+                if (path.empty())
+                {
+                    return;
+                }
+                glfwSetWindowTitle(getwindow(), ("Snake. Opened map: ..." + path.substr(path.find_last_of('\\'),path.size() - path.find_last_of('\\'))).c_str());
+                map = SnakeMap::load(path);
+                if (map->getField().x <= 0 || map->getField().y <= 0)
+                {
+                    ErrorAbort("field.x <= 0 || field.y <= 0")
+                }
+                if (map->getField().y != map->getField().x)
+                {
+                    ErrorAbort("field.y != field.x, which is unsupported")
+                }
+                if (map->getDefaultSnakeSize() < 2)
+                {
+                    ErrorAbort("DefaultSnakeSize < 2")
+                }
+                Reset();
+                size_callback(getWidth(), getHeight());
+                break;
+            }
+            case GLFW_KEY_I:
+                Info("This is my first game in c++; opengl. There are bugs in this game. If you find them, please write, admin@maserplay.ru .  By clicking on the \"O\", you can open the map file (.smap). Specification .smap: [field size defined by 1 number] [initial size of the snake] [a set of numbers from 0 to 1 that define each tile on the map.]")
+                break;
         }
     }
 }
@@ -255,7 +324,7 @@ void Snake::size_callback(int width, int height) {
     glViewport(0,0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    auto screensize = field;
+    auto screensize = map->getField();
     double Shift = 0;
     if ((float) width >= (float) height) {
         Shift = (((double) (width) / (double) (height)) - (double) screensize.x / (double) screensize.y) - 1;
@@ -279,4 +348,5 @@ Snake::~Snake() {
     delete BodyTexture;
     delete AngleTexture;
     delete TailTexture;
+    delete map;
 }

@@ -11,5 +11,7 @@
 GLFWwindow* getwindow();
 void setContext(Context* context);
 void loadMainMenu();
+GLuint getWidth();
+GLuint getHeight();
 
 #endif //ARCADEGAMESGLFW_MAIN_H

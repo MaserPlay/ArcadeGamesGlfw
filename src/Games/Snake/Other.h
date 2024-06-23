@@ -13,6 +13,7 @@ enum Directions{
     Right
 };
 struct Coords{
+    explicit Coords(unsigned int xy) : Coords(xy,xy) {}
     Coords(unsigned int x, unsigned int y) : x(x), y(y) {}
 
     bool operator<(const Coords &rhs) const {
@@ -50,12 +51,6 @@ struct Coords{
 
     unsigned int x;
     unsigned int y;
-};
-
-template<typename T>
-std::string GetGameFolderName(){
-    //wxCHECK(wxFileName::IsDirReadable("Games\\" + T::name), "Games\\Other");
-    return "Games\\" + T::name + "\\";
 };
 
 #endif //ARCADEGAMES_OTHER_H

@@ -14,6 +14,7 @@
 
 //Games
 #include "Snake.h"
+#include "Pacman.h"
 
 //System
 #include "typeinfo"
@@ -21,12 +22,14 @@
 
 void ImguiContext::init() {
     GameList.push_back(new Snake());
+    GameList.push_back(new Pacman());
 
     //IMGUI INIT
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = NULL;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
@@ -50,9 +53,20 @@ void ImguiContext::loop() {
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::Begin("q", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar);
     ImGui::BeginMenuBar();
-    if (ImGui::BeginMenu("Opengl"))
+#ifdef _DEBUG
+    if (ImGui::BeginMenu("Debugging"))
     {
-        if (ImGui::MenuItem("Get Error", "CTRL+H")) {
+        if (ImGui::MenuItem("glfwGetError();")) {
+            const char **errorDisc = NULL;
+            auto e = glfwGetError(errorDisc);
+            if (errorDisc == NULL)
+            {
+                Error(("No. Code of error: " + std::to_string(e)).c_str())
+            } else {
+                Error((std::string(*errorDisc) + ". Code of error: " + std::to_string(e)).c_str())
+            }
+        }
+        if (ImGui::MenuItem("glGetError();")) {
             auto e = glGetError();
             std::string errorDisc = "Unknown error";
             switch(e){
@@ -81,17 +95,48 @@ void ImguiContext::loop() {
                     errorDisc = "Unknown error";
                     break;
             }
-            Info((errorDisc + ". Code of error: " + std::to_string(e)).c_str());
+            Error((errorDisc + ". Code of error: " + std::to_string(e)).c_str());
+        }
+        if (ImGui::MenuItem("ImGui::ShowDebugLogWindow();")) {
+            ImguiDebugLog = true;
         }
         /*if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
         ImGui::Separator();*/
         ImGui::EndMenu();
     }
+#endif
+    if (ImGui::BeginMenu("Help"))
+    {
+        if (ImGui::MenuItem(("About " + std::string(APPNAME)).c_str())) {
+            Info((std::string(APPNAME) + " v." + std::to_string(APPVERSION) + " by " + std::string(APPAUTHOR)).c_str())
+        }
+        if (ImGui::MenuItem("About ImGui")) {
+            ImguiAbout = true;
+        }
+        if (ImGui::MenuItem("User guide")) {
+            ImguiUGuide = true;
+        }
+        if (ImGui::MenuItem("Quit")) {
+            glfwSetWindowShouldClose(getwindow(), GLFW_TRUE);
+        }
+        ImGui::EndMenu();
+    }
     ImGui::EndMenuBar();
+    if (ImguiDebugLog) {
+        ImGui::ShowDebugLogWindow(&ImguiDebugLog);
+    }
+    if (ImguiAbout) {
+        ImGui::ShowAboutWindow(&ImguiAbout);
+    }
+    if (ImguiUGuide) {
+        ImGui::Begin("UserGuide", &ImguiUGuide);
+            ImGui::ShowUserGuide();
+        ImGui::End();
+    }
 
 
     for (auto g:GameList) {
-        if (ImGui::Button(typeid(g).name(), ImVec2(250, 250)))
+        if (ImGui::Button(typeid(*g).name(), ImVec2(250, 250)))
         {
             setContext(g);
         }

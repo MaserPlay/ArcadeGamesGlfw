@@ -18,7 +18,6 @@ public:
         RGB,
         ALPHA_WHITE
     };
-
     Texture() = default;
 
     Texture(const unsigned char* image, int width, int height, Modes modes = Modes::RGBA) : isUseFiltering(false), mode(modes)

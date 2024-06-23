@@ -11,12 +11,23 @@
 #include "ImguiContext.h"
 //MEMORY
 #include "memory"
+//OTHER
+#include "SystemAdapter.h"
 
 void window_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void error_callback(int code, const char *description);
 
 // Window dimensions
 GLuint WIDTH = 800, HEIGHT = 600;
+GLuint getWidth()
+{
+    return WIDTH;
+}
+GLuint getHeight()
+{
+    return HEIGHT;
+}
 GLFWwindow* window;
 GLFWwindow* getwindow()
 {
@@ -42,9 +53,11 @@ int main()
     Print("Starting...")
     // Init GLFW
     glfwInit();
+    //Init
+    SystemAdapter::Init();
 
     // Create a GLFWwindow object that we can use for GLFW's functions
-    window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH, HEIGHT, APPNAME, nullptr, nullptr);
     if (window == nullptr)
     {
         glfwTerminate();
@@ -52,7 +65,8 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    // Set the required callback functions
+    //ERROR
+    glfwSetErrorCallback(error_callback);
 
     // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
     glewExperimental = GL_TRUE;
@@ -88,8 +102,9 @@ int main()
             tempContext = NULL;
         }
     }
+    Print("Closing...")
 
-    // Terminate GLFW, clearing any resources allocated by GLFW.
+    SystemAdapter::Destroy();
     delete currentContext;
     glfwTerminate();
     return 0;
@@ -101,4 +116,8 @@ void window_size_callback(GLFWwindow* window, int width, int height){
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     currentContext->key_callback(key, scancode, action, mods);
+}
+void error_callback(int code, const char *description)
+{
+    Error(("GLFW error was occuruped" + std::string(description) + " with code" + std::to_string(code)).c_str())
 }
