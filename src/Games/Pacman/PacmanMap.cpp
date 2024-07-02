@@ -3,11 +3,11 @@
 //
 
 #include <fstream>
-#include "SnakeMap.h"
+#include "PacmanMap.h"
 #include "debug.h"
 
-SnakeMap* SnakeMap::load(const std::string& name) {
-    auto m = new SnakeMap();
+PacmanMap* PacmanMap::load(const std::string& name) {
+    auto m = new PacmanMap();
     std::ifstream str(name, std::ios::in);
     if (str.is_open())
     {
@@ -17,33 +17,34 @@ SnakeMap* SnakeMap::load(const std::string& name) {
         str >> word;
         m->field.y = std::stoi(word);
         str >> word;
-        m->defaultSnakeSize = std::stoi(word);
+        m->GhostSpawnZone.x = std::stoi(word);
+        str >> word;
+        m->GhostSpawnZone.y = std::stoi(word);
         str >> word;
         m->Map.clear();
         for (auto& e:word) {
             m->Map.push_back(static_cast<Tile>((int) (e - '0')));
         };
-        spdlog::info("{} loaded", name);
     } else {
-        spdlog::warn("Cannot open {}", name);
+        spdlog::error("Cannot open " + name);
         return nullptr;
     }
     str.close();
     return m;
 }
 
-SnakeMap::SnakeMap() {
+PacmanMap::PacmanMap() {
     field = glm::vec<2, unsigned int>(10);
     for (int i = 0; i < field.x * field.y; ++i) {
         Map.push_back(Tile::None);
     }
 }
 
-void SnakeMap::save(const std::string &name, SnakeMap *map) {
+void PacmanMap::save(const std::string &name, PacmanMap *map) {
     std::ofstream s(name);
     if (s.is_open())
     {
-        s << map->getField().x << ' ' << map->getField().y << ' ' << map->getDefaultSnakeSize() << ' ';
+        s << map->getField().x << " " << map->getField().y << " " << map->getGhostSpawnZone().x << " " << map->getGhostSpawnZone().y << " ";
         for (auto& m : map->getMap()) {
             s << m;
         }

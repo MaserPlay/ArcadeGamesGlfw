@@ -6,31 +6,104 @@
 #include <ctime>
 #include "debug.h"
 #include "SystemAdapter.h"
-
-float tickSpeed = .4; // s
+//STB
+//DEFINE STBI
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+//ARCHIVE
+#include "ZipArchive.h"
+#include "SoundFile.hpp"
 
 void Snake::init() {
     glfwSetWindowTitle(getwindow(), "Snake");
+
+    map = SnakeMap::load(SystemAdapter::GetGameFolderName("Snake") + "Default.smap");
+    if (map == nullptr)
+    {
+        map = new SnakeMap();
+        SnakeMap::save(SystemAdapter::GetGameFolderName("Snake") + "Default.smap", map);
+    }
+
     Reset();
     if (map->getField().x <= 0 || map->getField().y <= 0)
     {
-        ErrorAbort("field.x <= 0 || field.y <= 0")
+        ErrorAbort("[SNAKE] field.x <= 0 || field.y <= 0")
     }
     if (map->getField().y != map->getField().x)
     {
-        ErrorAbort("field.y != field.x, which is unsupported")
+        ErrorAbort("[SNAKE] field.y != field.x, which is unsupported")
     }
     if (map->getDefaultSnakeSize() < 2)
     {
-        ErrorAbort("DefaultSnakeSize < 2")
+        ErrorAbort("[SNAKE] DefaultSnakeSize < 2")
     }
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.1);
     glLoadIdentity();
+    loadResources();
+    //Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
+}
+
+void Snake::loadResources() {
+    spdlog::info("[SNAKE] Start loading resources...");
+    if (!std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip")){
+        spdlog::warn("[SNAKE] archive with resources {} not found", SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
+        return;
+    }
+    auto archive = ZipArchive(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
+    char *content = NULL; zip_uint64_t size; unsigned char *image = NULL;
+    int width, height, nrChannels;
+
+    auto loadImage = [&](const std::string& name, Texture*& texture){
+        archive.get(name, content, size);
+        if (content == NULL)
+        {
+            spdlog::warn("[SNAKE] " + name + " not found");
+        } else {
+            image = stbi_load_from_memory(reinterpret_cast<const unsigned char *const>(content), size, &width, &height,
+                                          &nrChannels, 0);
+            texture = new Texture(image, width, height);
+            texture->Load();
+            //SOIL_free_image_data(image);
+            spdlog::info("[SNAKE] " + name + " loaded");
+        }
+    };
+    auto loadAudio = [&](const std::string& name, ALuint& buffer){
+        archive.get(name, content, size);
+        if (content == NULL) {
+            spdlog::warn("[SNAKE] " + name + " not found");
+        } else {
+            auto sf = new SoundFile();
+            sf->openRead(content, size);
+            ALenum format;
+            if (sf->getChannelCount() == 1)
+                format = AL_FORMAT_MONO16;
+            else if (sf->getChannelCount() == 2)
+                format = AL_FORMAT_STEREO16;
+            else {
+                spdlog::error("ERROR: unrecognised wave format: {} channels", sf->getChannelCount());
+                return;
+            }
+            alGenBuffers(1, &buffer);
+            alBufferData(buffer, format, sf->getOpenAlData(), sf->getOpenAlDataSize(), sf->getSampleRate());
+            delete sf;
+            spdlog::info("[SNAKE] " + name + " loaded");
+        }
+    };
+
+    loadImage("apple.png", AppleTexture);
+    loadImage("body_angle.png", AngleTexture);
+    loadImage("tail.png", TailTexture);
+    loadImage("head.png", HeadTexture);
+    loadImage("body.png", BodyTexture);
+    loadImage("wall.png", WallTexture);
+    loadAudio("eat.wav", Eat);
+
+    alGenSources(1, &source);
+    alSourcei( source, AL_BUFFER, Eat);
 }
 void Snake::Reset() {
-    isCrashed = false;
     direction = Directions::Down;
     snake.clear();
     for (int i = 1; i < map->getDefaultSnakeSize() + 1; ++i) {
@@ -44,7 +117,7 @@ void Snake::ResetApple(unsigned short counter) {
     if (counter <= 0)
     {
         Apple = Coords(0);
-        Error("Cannot place Apple. The counter is over")
+        spdlog::error("[SNAKE] Cannot place Apple. The counter is over");
         return;
     }
     Apple = Coords(std::rand() % map->getField().x + 1, std::rand() % map->getField().y + 1);
@@ -56,7 +129,7 @@ void Snake::ResetApple(unsigned short counter) {
         }
     }
     for (int i = 0; i < map->getMap().size(); ++i) {
-        if (map->getMap()[i] == SnakeMap::Wall && Apple == Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1)) {
+        if (map->getMap()[i] == SnakeMap::Wall && Apple == Coords((i % map->getField().x) + 1, (i / map->getField().x) + 1)) {
             ResetApple(counter);
             return;
         }
@@ -75,18 +148,17 @@ void Snake::MoveSnake(SnakeBody to) {
     else if (tryTo.x >= map->getField().x + 1)
         tryTo.x = 1;
     auto crash = [=](){
-        isCrashed = true;
-        switch (boxer::show("The snake crashed into an obstacle", "The snake crashed into an obstacle", boxer::Buttons::OKCancel)) {
-            case boxer::Selection::OK: {
+        switch (boxer::show("The snake crashed into an obstacle. Do you want to reset field?", "The snake crashed into an obstacle", boxer::Buttons::YesNo)) {
+            case boxer::Selection::Yes: {
                 Reset();
                 break;
             }
-            case boxer::Selection::Cancel: {
+            case boxer::Selection::No: {
                 loadMainMenu();
                 break;
             }
             default: {
-                Warning("You forgot to add case, in crashed snake dialog");
+                spdlog::warn("[SNAKE] You forgot to add case, in crashed snake dialog");
                 loadMainMenu();
                 break;
             }
@@ -112,6 +184,14 @@ void Snake::MoveSnake(SnakeBody to) {
     if (tryTo == Apple)
     {
         ResetApple();
+        alSourcePlay( source);
+
+        ALint state = AL_PLAYING;
+
+        while(state == AL_PLAYING)
+        {
+            alGetSourcei( source, AL_SOURCE_STATE, &state);
+        }
         //Eat->Play();
     } else {
         snake.pop_back();
@@ -122,7 +202,8 @@ void Snake::MoveSnake(SnakeBody to) {
 void Snake::loop() {
     glfwPollEvents();
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0,0,0,1);
+    glBindTexture(GL_TEXTURE_2D, 0);
     for (int x = 1; x < map->getField().x + 1; ++x) {
         for (int y = 1; y < map->getField().y + 1; ++y) {
             if (x%2==0)
@@ -149,18 +230,18 @@ void Snake::loop() {
             case SnakeMap::None:
                 break;
             case SnakeMap::Wall: {
-                glColor4d(0, 0, 1., 1.);
-                glBindTexture(GL_TEXTURE_2D, 0);
+                if (WallTexture->initImage == 0) { glColor4d(0,0,1., 1.); } else {glColor4d(1.,1.,1., 1.);}
+                glBindTexture(GL_TEXTURE_2D, WallTexture->initImage);
+                auto c = Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1);
                 renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1));
                 break;
             }
             default:
-                Warning("Cannot find tile type in render")
+                spdlog::warn("[SNAKE] Cannot find tile type in render");
                 break;
         }
     }
     if (HeadTexture->initImage == 0) { glColor4d(1.,0,0, 1.); } else {glColor4d(1.,1.,1., 1.);}
-    if (isCrashed){glColor4d(1.,1.,0, 1.);}
     glBindTexture(GL_TEXTURE_2D, HeadTexture->initImage);
     switch (snake.front().direction)
     {
@@ -177,10 +258,7 @@ void Snake::loop() {
             renderTile(snake.front(), {HeadTexture->texturecords[1], HeadTexture->texturecords[2], HeadTexture->texturecords[3], HeadTexture->texturecords[0]});
             break;
     }
-    if (BodyTexture->initImage == 0)
-    {
-        glColor4d(1.,0,0, 1.);
-    } else {glColor4d(1.,1.,1., 1.);}
+    if (BodyTexture->initImage == 0) { glColor4d(1.,0,0, 1.); } else {glColor4d(1.,1.,1., 1.);}
     for (int i = 1; i < snake.size() - 1; ++i) {
         if (snake[i].direction != snake[i - 1].direction)
         {
@@ -231,6 +309,7 @@ void Snake::loop() {
 
     // Swap the screen buffers
     glfwSwapBuffers(getwindow());
+    //SERVER
     if (lastTickTime + tickSpeed <= ((float) clock() / CLOCKS_PER_SEC)) {
         lastTickTime = ((float) clock() / CLOCKS_PER_SEC);
 
@@ -249,7 +328,7 @@ void Snake::loop() {
                 MoveSnake(SnakeBody(1,0, direction));
                 break;
             default:
-                Warning("Unknown direction in SnakeTimer");
+                spdlog::warn("[SNAKE] Unknown direction in SnakeTimer");
                 MoveSnake(SnakeBody(0,1, direction));
                 break;
         }
@@ -299,15 +378,15 @@ void Snake::key_callback(int key, int scancode, int action, int mods) {
                 map = SnakeMap::load(path);
                 if (map->getField().x <= 0 || map->getField().y <= 0)
                 {
-                    ErrorAbort("field.x <= 0 || field.y <= 0")
+                    ErrorAbort("[SNAKE] field.x <= 0 || field.y <= 0")
                 }
                 if (map->getField().y != map->getField().x)
                 {
-                    ErrorAbort("field.y != field.x, which is unsupported")
+                    ErrorAbort("[SNAKE] field.y != field.x, which is unsupported")
                 }
                 if (map->getDefaultSnakeSize() < 2)
                 {
-                    ErrorAbort("DefaultSnakeSize < 2")
+                    ErrorAbort("[SNAKE] DefaultSnakeSize < 2")
                 }
                 Reset();
                 size_callback(getWidth(), getHeight());
@@ -324,15 +403,14 @@ void Snake::size_callback(int width, int height) {
     glViewport(0,0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    auto screensize = map->getField();
+    auto& screensize = map->getField();
     double Shift = 0;
     if ((float) width >= (float) height) {
-        Shift = (((double) (width) / (double) (height)) - (double) screensize.x / (double) screensize.y) - 1;
-        glOrtho( -Shift, (double) screensize.x * ((double) width / (double) height) - Shift, 0. + 1, (double) screensize.y + 1, 0., 1.);
-    }
-    else {
-        Shift = (((double) (height) / (double) (width)) - (double) screensize.y / (double) screensize.x) - 1;
-        glOrtho(0. + 1, (double) screensize.x + 1, -Shift, (double) screensize.y * ((double) height / (double) width) - Shift, 0., 1.);
+        Shift = (((float) width / (float) height) - ((float) screensize.x / (float) screensize.y)) * 5 - 1.;
+        glOrtho( -Shift, (float) screensize.x * ((float) width / (float) height) - Shift, 0. + 1, (float) screensize.y + 1, 0., 1.);
+    } else {
+        Shift = (((float) height / (float) width) - ((float) screensize.y / (float) screensize.x)) * 5 - 1.;
+        glOrtho(0. + 1, (float) screensize.x + 1, -Shift, (float) screensize.y * ((float) height / (float) width) - Shift, 0., 1.);
     }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -349,4 +427,7 @@ Snake::~Snake() {
     delete AngleTexture;
     delete TailTexture;
     delete map;
+    //AUDIO
+    alDeleteSources( 1, &source);
+    alDeleteBuffers( 1, &Eat);
 }

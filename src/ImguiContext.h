@@ -17,7 +17,9 @@ public:
 
     ~ImguiContext() override;
     void loop() override;
+#ifdef _DEBUG
     bool ImguiDebugLog = false;
+#endif
     bool ImguiAbout = false;
     bool ImguiUGuide = false;
     void size_callback(int width, int height) override {}

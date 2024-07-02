@@ -5,13 +5,8 @@
 #ifndef ARCADEGAMESGLFW_BASEGAME_H
 #define ARCADEGAMESGLFW_BASEGAME_H
 
-
-#include <string>
 #include "Context.h"
 
-class BaseGame : public Context {
-    static const std::string name;
-};
-
+typedef Context BaseGame;
 
 #endif //ARCADEGAMESGLFW_BASEGAME_H

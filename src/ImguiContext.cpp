@@ -7,6 +7,9 @@
 
 #include "main.h"
 
+//OPENAL
+#include <al.h>
+
 //IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -14,15 +17,16 @@
 
 //Games
 #include "Snake.h"
-#include "Pacman.h"
+//#include "Pacman.h"
 
 //System
 #include "typeinfo"
 
 
 void ImguiContext::init() {
-    GameList.push_back(new Snake());
-    GameList.push_back(new Pacman());
+#define AddGame(classname) GameList.push_back(new classname());
+    AddGame(Snake)
+   // AddGame(Pacman)
 
     //IMGUI INIT
     // Setup Dear ImGui context
@@ -39,8 +43,7 @@ void ImguiContext::init() {
 }
 
 void ImguiContext::loop() {
-    //glfwWaitEvents();
-    glfwPollEvents();
+    glfwWaitEvents();
 
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -97,11 +100,37 @@ void ImguiContext::loop() {
             }
             Error((errorDisc + ". Code of error: " + std::to_string(e)).c_str());
         }
+        if (ImGui::MenuItem("alGetError();")) {
+            auto e = alGetError();
+            std::string errorDisc = "Unknown error";
+            switch(e){
+                case AL_INVALID_NAME:
+                    errorDisc = "AL_INVALID_NAME: a bad name (ID) was passed to an OpenAL function";
+                    break;
+                case AL_INVALID_ENUM:
+                    errorDisc = "AL_INVALID_ENUM: an invalid enum value was passed to an OpenAL function";
+                    break;
+                case AL_INVALID_VALUE:
+                    errorDisc = "AL_INVALID_VALUE: an invalid value was passed to an OpenAL function";
+                    break;
+                case AL_INVALID_OPERATION:
+                    errorDisc = "AL_INVALID_OPERATION: the requested operation is not valid";
+                    break;
+                case AL_OUT_OF_MEMORY:
+                    errorDisc = "AL_OUT_OF_MEMORY: the requested operation resulted in OpenAL running out of memory";
+                    break;
+                case AL_NO_ERROR:
+                    errorDisc = "AL_NO_ERROR";
+                    break;
+                default:
+                    errorDisc = "Unknown error";
+                    break;
+            }
+            Error((errorDisc + ". Code of error: " + std::to_string(e)).c_str());
+        }
         if (ImGui::MenuItem("ImGui::ShowDebugLogWindow();")) {
             ImguiDebugLog = true;
         }
-        /*if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
-        ImGui::Separator();*/
         ImGui::EndMenu();
     }
 #endif
@@ -122,9 +151,11 @@ void ImguiContext::loop() {
         ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
+#ifdef _DEBUG
     if (ImguiDebugLog) {
         ImGui::ShowDebugLogWindow(&ImguiDebugLog);
     }
+#endif
     if (ImguiAbout) {
         ImGui::ShowAboutWindow(&ImguiAbout);
     }

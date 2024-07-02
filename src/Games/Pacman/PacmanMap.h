@@ -5,17 +5,19 @@
 #ifndef ARCADEGAMESGLFW_SNAKEMAP_H
 #define ARCADEGAMESGLFW_SNAKEMAP_H
 
-#include <string>
-#include <glm/detail/type_vec2.hpp>
-#include "vector"
 
-class SnakeMap final {
+#include <glm/detail/type_vec2.hpp>
+#include <vector>
+
+class PacmanMap final {
 public:
-    SnakeMap();
+    PacmanMap();
 
     enum Tile{
         None,
-        Wall
+        Wall,
+        Point,
+        BigPoint
     };
     [[nodiscard]] const glm::vec<2, unsigned int> &getField() const{
         return field;
@@ -25,17 +27,17 @@ public:
         return Map;
     }
 
-    [[nodiscard]] unsigned short getDefaultSnakeSize() const {
-        return defaultSnakeSize;
+    [[nodiscard]] const glm::vec<2, unsigned int> &getGhostSpawnZone() const {
+        return GhostSpawnZone;
     }
 
-    static SnakeMap* load(const std::string& name);
+    static PacmanMap* load(const std::string& name);
 
-    static void save(const std::string& name, SnakeMap* map);
+    static void save(const std::string& name, PacmanMap* map);
 
 private:
     glm::vec<2, unsigned int> field {10};
-    unsigned short defaultSnakeSize = 4;
+    glm::vec<2, unsigned int> GhostSpawnZone {0};
     std::vector<Tile> Map {};
 };
 

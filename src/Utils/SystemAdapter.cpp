@@ -29,7 +29,7 @@ namespace SystemAdapter{
         try {
             std::filesystem::create_directory(name);
         } catch(std::filesystem::filesystem_error e){
-            Error(e.what())
+            spdlog::error(e.what());
         }
         return std::filesystem::current_path().string() + "\\" + name + "\\";
     }
