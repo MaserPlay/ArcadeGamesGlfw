@@ -50,3 +50,4 @@ This is first game, that I release. Controlling:
 I want to
 - [ ] create animation to snake
 - [ ] Add a counter
+- [ ] Redraw all assets

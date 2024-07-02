@@ -7,9 +7,6 @@
 
 #include "main.h"
 
-//OPENAL
-#include <al.h>
-
 //IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -24,6 +21,7 @@
 
 
 void ImguiContext::init() {
+    SetIcon("standard_icon.png");
 #define AddGame(classname) GameList.push_back(new classname());
     AddGame(Snake)
    // AddGame(Pacman)

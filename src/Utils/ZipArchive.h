@@ -11,10 +11,10 @@
 
 class ZipArchive {
 public:
-    explicit ZipArchive(std::string name);
-    struct zip_stat getStat(std::string name);
-    char *getContent(std::string name, struct zip_stat stat);
-    char *getContent(std::string name);
+    explicit ZipArchive(const std::string& name);
+    struct zip_stat getStat(const std::string& name);
+    char *getContent(const std::string& name, struct zip_stat stat);
+    char *getContent(const std::string& name);
     void get(const std::string& name, char*& content, zip_uint64_t& size);
 
     virtual ~ZipArchive();

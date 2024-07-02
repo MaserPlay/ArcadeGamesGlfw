@@ -16,6 +16,7 @@
 
 void Snake::init() {
     glfwSetWindowTitle(getwindow(), "Snake");
+    SetIcon("snake_icon.png");
 
     map = SnakeMap::load(SystemAdapter::GetGameFolderName("Snake") + "Default.smap");
     if (map == nullptr)
@@ -24,7 +25,6 @@ void Snake::init() {
         SnakeMap::save(SystemAdapter::GetGameFolderName("Snake") + "Default.smap", map);
     }
 
-    Reset();
     if (map->getField().x <= 0 || map->getField().y <= 0)
     {
         ErrorAbort("[SNAKE] field.x <= 0 || field.y <= 0")
@@ -37,12 +37,13 @@ void Snake::init() {
     {
         ErrorAbort("[SNAKE] DefaultSnakeSize < 2")
     }
+    Reset();
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.1);
     glLoadIdentity();
     loadResources();
-    //Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
+    Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
 }
 
 void Snake::loadResources() {
@@ -52,8 +53,8 @@ void Snake::loadResources() {
         return;
     }
     auto archive = ZipArchive(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
-    char *content = NULL; zip_uint64_t size; unsigned char *image = NULL;
-    int width, height, nrChannels;
+    char *content = NULL; zip_uint64_t size;
+    unsigned char *image = NULL; int width, height, nrChannels;
 
     auto loadImage = [&](const std::string& name, Texture*& texture){
         archive.get(name, content, size);
@@ -65,7 +66,7 @@ void Snake::loadResources() {
                                           &nrChannels, 0);
             texture = new Texture(image, width, height);
             texture->Load();
-            //SOIL_free_image_data(image);
+            stbi_image_free(content);
             spdlog::info("[SNAKE] " + name + " loaded");
         }
     };

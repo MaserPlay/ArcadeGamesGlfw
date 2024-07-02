@@ -5,8 +5,8 @@
 #include <GLFW/glfw3.h>
 
 // OPENAL
-#include <al.h>
 #include <alc.h>
+#include <stb_image.h>
 
 #include "debug.h"
 #include "main.h"
@@ -21,9 +21,12 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #else
 #include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/rotating_file_sink.h"
+#include <windows.h>
+#include <stb_image.h>
+
 #endif
 #include "spdlog/spdlog.h"
+#include "ZipArchive.h"
 
 void window_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -50,10 +53,33 @@ Context* currentContext = NULL;
 Context* tempContext = NULL;
 void setContext(Context* context)
 {
-    tempContext = currentContext; //TODO: Overflow
+    tempContext = currentContext;
     context->init();
     context->size_callback(WIDTH, HEIGHT);
     currentContext = context;
+}
+
+void SetIcon(const std::string& name)
+{
+    spdlog::debug("loading Assets.zip && " + name);
+    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
+        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+        char *content = NULL; zip_uint64_t size = 0;
+        zip.get(name, content, size);
+        if (content != NULL) {
+            unsigned char *image = NULL; int width, height, nrChannels;
+            image = stbi_load_from_memory(reinterpret_cast<const unsigned char *const>(content), size, &width, &height,
+                                          &nrChannels, 0);
+            GLFWimage e{ width, height, image};
+            glfwSetWindowIcon(window, 1, &e);
+            stbi_image_free(content);
+            spdlog::info(name + " loaded && applied");
+        } else {
+            spdlog::warn(name + " not found");
+        }
+    } else {
+        spdlog::warn("Assets.zip not found");
+    }
 }
 void loadMainMenu()
 {
@@ -62,8 +88,7 @@ void loadMainMenu()
 
 // The MAIN function, from here we start the application and run the game loop
 #ifdef DO_WINMAIN
-    #include <windows.h>
-    int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 #else
 int main()
 #endif
@@ -85,15 +110,9 @@ int main()
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
 #else
-    try
-    {
-        auto logger = spdlog::basic_logger_mt("logger", "logs/log.txt");
-        spdlog::set_default_logger(logger);
-    }
-    catch (const spdlog::spdlog_ex &ex)
-    {
-        std::cout << "Log init failed: " << ex.what() << std::endl;
-    }
+    auto logger = spdlog::basic_logger_mt("logger", "logs/log.txt");
+    spdlog::set_level(spdlog::level::info); // Set global log level to debug3
+    spdlog::set_default_logger(logger);
 #endif
     spdlog::debug("Starting...");
     // Init GLFW
@@ -113,6 +132,7 @@ int main()
         ErrorAbort("Failed to create GLFW window")
         return -1;
     }
+
     glfwMakeContextCurrent(window);
     //ERROR
     glfwSetErrorCallback(error_callback);
