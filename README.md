@@ -39,6 +39,7 @@ In future I want to
 # Games
 ### Snake
 This is first game, that I release.
+
 ![snake_demo_1.jpg](img/snake_demo_1.jpg)
 
 Controlling:
