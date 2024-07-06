@@ -2,7 +2,7 @@
 This is a small launcher, while developing which I am learning to work with Opengl, Openal and other libraries.
 Available games: [Snake](#snake)
 
-![screenshot of launcher](img/launcher_demo_1.jpg)
+![(intro) Maserplay presents](img/intro_demo_1.jpg)
 ## Cloning and compiling
 To clone this repository use 
 ```
@@ -36,6 +36,8 @@ In future I want to
  and release following games:
 - [X] Snake (reference - https://g.co/kgs/cS4VW9D) ,
 - [ ] Pacman (reference - https://masonicgit.github.io/pacman/ , https://www.google.com/logos/2010/pacman10-i.html)
+### Screenshots
+![screenshot of launcher](img/launcher_demo_1.jpg)
 # Games
 ### Snake
 This is first game, that I release.
