@@ -372,4 +372,10 @@ void IntroContext::renderTile(glm::vec<2, short> coords, Texture *t, glm::vec4 c
     glEnd();
 }
 
+IntroContext::~IntroContext() {
+    if (t.joinable()) {
+        t.join();
+    }
+}
+
 #undef IntroDuration

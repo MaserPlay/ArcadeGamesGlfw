@@ -23,6 +23,8 @@ struct SnakeBodyUpdated : public glm::vec<2, short>{
 
 class IntroContext : public Context {
 public:
+    ~IntroContext() override;
+
     void init() override;
 
     void loop() override;
