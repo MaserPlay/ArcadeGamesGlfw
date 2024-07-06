@@ -11,8 +11,7 @@ void Texture::Load() {
         glBindTexture(GL_TEXTURE_2D,
                       this->initImage); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
         // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                        this->WrappingMode);    // set texture wrapping to GL_REPEAT (default wrapping method)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this->WrappingMode);    // set texture wrapping to GL_REPEAT (default wrapping method)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this->WrappingMode);
         // set texture filtering parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -30,6 +29,9 @@ void Texture::Load() {
             case Modes::ALPHA_WHITE:
                 mode = GL_ALPHA;
                 break;
+            case Modes::RED:
+                mode = GL_RED;
+                break;
             default:
                 mode = GL_RGBA;
                 break;
@@ -38,4 +40,8 @@ void Texture::Load() {
                      GL_UNSIGNED_BYTE, this->image);
         glGenerateMipmap(GL_TEXTURE_2D);
 
+}
+
+Texture::~Texture() {
+    glDeleteTextures(1, &this->initImage);
 }

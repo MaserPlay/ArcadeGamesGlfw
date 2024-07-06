@@ -156,7 +156,7 @@ bool SoundFile::openWrite(const std::string& filename, unsigned int channelCount
     int format = getFormatFromFilename(filename);
     if (format == -1)
     {
-        // Error : unrecognized extension
+        // ErrorBox : unrecognized extension
         err() << "Failed to create sound file \"" << filename << "\" (unknown format)" << std::endl;
         return false;
     }
@@ -267,14 +267,14 @@ int SoundFile::getFormatFromFilename(const std::string& filename)
     return -1;
 }
 
-short *SoundFile::getOpenAlData() {
+short *SoundFile::getOpenAlData() const {
     short *membuf;
     membuf = static_cast<short *>(malloc((size_t) (m_frames * m_channelCount) * sizeof(short)));
     auto ee = sf_readf_short(m_file, membuf, m_frames);
     return membuf;
 }
 
-int SoundFile::getOpenAlDataSize() {
+int SoundFile::getOpenAlDataSize() const {
     return (int) (m_frames * m_channelCount) * (int)sizeof(short);
 }
 

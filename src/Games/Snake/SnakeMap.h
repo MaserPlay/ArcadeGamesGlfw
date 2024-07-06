@@ -8,6 +8,7 @@
 #include <string>
 #include <glm/detail/type_vec2.hpp>
 #include "vector"
+#include "Other.h"
 
 class SnakeMap final {
 public:
@@ -29,6 +30,18 @@ public:
         return defaultSnakeSize;
     }
 
+    [[nodiscard]] float getTickSpeed() const {
+        return tickSpeed;
+    }
+
+    [[nodiscard]] const Coords &getDefaultSnakePos() const {
+        return DefaultSnakePos;
+    }
+
+    [[nodiscard]] Directions getDefaultSnakeDirection() const {
+        return DefaultSnakeDirection;
+    }
+
     static SnakeMap* load(const std::string& name);
 
     static void save(const std::string& name, SnakeMap* map);
@@ -37,6 +50,9 @@ private:
     glm::vec<2, unsigned int> field {10};
     unsigned short defaultSnakeSize = 4;
     std::vector<Tile> Map {};
+    float tickSpeed = .4;
+    Coords DefaultSnakePos {1,1};
+    Directions DefaultSnakeDirection = Down;
 };
 
 

@@ -3,6 +3,10 @@
 //
 
 #include "SystemAdapter.h"
+#ifdef _WINDOWS
+#include <windows.h>
+#include <shellapi.h>
+#endif
 
 namespace SystemAdapter{
     void Init(){
@@ -37,8 +41,11 @@ namespace SystemAdapter{
             return std::filesystem::current_path().string() + "\\";
         }
     }
-    void GetDefaultFont(){
-
+    void OpenLink(std::string link)
+    {
+#ifdef _WINDOWS
+        ShellExecute(0, 0, link.c_str(), 0, 0 , SW_SHOW );
+#endif
     }
 
     void Destroy(){

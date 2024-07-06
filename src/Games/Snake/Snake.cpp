@@ -17,39 +17,28 @@
 void Snake::init() {
     glfwSetWindowTitle(getwindow(), "Snake");
     SetIcon("snake_icon.png");
+    Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
 
     map = SnakeMap::load(SystemAdapter::GetGameFolderName("Snake") + "Default.smap");
     if (map == nullptr)
     {
+        if (boxer::show("Failed to open default map. Regenerate it?", "Failed to open map", boxer::Style::Error, boxer::Buttons::YesNo) == boxer::Selection::No)
+        {
+            loadMainMenu();
+            return;
+        }
         map = new SnakeMap();
         SnakeMap::save(SystemAdapter::GetGameFolderName("Snake") + "Default.smap", map);
     }
-
-    if (map->getField().x <= 0 || map->getField().y <= 0)
-    {
-        ErrorAbort("[SNAKE] field.x <= 0 || field.y <= 0")
-    }
-    if (map->getField().y != map->getField().x)
-    {
-        ErrorAbort("[SNAKE] field.y != field.x, which is unsupported")
-    }
-    if (map->getDefaultSnakeSize() < 2)
-    {
-        ErrorAbort("[SNAKE] DefaultSnakeSize < 2")
-    }
     Reset();
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.1);
-    glLoadIdentity();
+    initEngine();
     loadResources();
-    Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
 }
 
 void Snake::loadResources() {
-    spdlog::info("[SNAKE] Start loading resources...");
+    SPDLOG_INFO("Start loading resources...");
     if (!std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip")){
-        spdlog::warn("[SNAKE] archive with resources {} not found", SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
+        SPDLOG_WARN("archive with resources {} not found", SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
         return;
     }
     auto archive = ZipArchive(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
@@ -60,36 +49,31 @@ void Snake::loadResources() {
         archive.get(name, content, size);
         if (content == NULL)
         {
-            spdlog::warn("[SNAKE] " + name + " not found");
+            SPDLOG_WARN(name + " not found");
         } else {
             image = stbi_load_from_memory(reinterpret_cast<const unsigned char *const>(content), size, &width, &height,
                                           &nrChannels, 0);
-            texture = new Texture(image, width, height);
+            if (nrChannels == 4)
+            {
+                texture = new Texture(image, width, height);
+            } else if (nrChannels == 3)
+            {
+                texture = new Texture(image, width, height, Texture::Modes::RGB);
+            } else {
+                SPDLOG_WARN("{} have {} channels. What is undefined", name, nrChannels);
+            }
             texture->Load();
             stbi_image_free(content);
-            spdlog::info("[SNAKE] " + name + " loaded");
+            SPDLOG_INFO(name + " loaded");
         }
     };
-    auto loadAudio = [&](const std::string& name, ALuint& buffer){
+    auto loadAudio = [&](const std::string& name, Sound*& buffer){
         archive.get(name, content, size);
         if (content == NULL) {
-            spdlog::warn("[SNAKE] " + name + " not found");
+            SPDLOG_WARN(name + " not found");
         } else {
-            auto sf = new SoundFile();
-            sf->openRead(content, size);
-            ALenum format;
-            if (sf->getChannelCount() == 1)
-                format = AL_FORMAT_MONO16;
-            else if (sf->getChannelCount() == 2)
-                format = AL_FORMAT_STEREO16;
-            else {
-                spdlog::error("ERROR: unrecognised wave format: {} channels", sf->getChannelCount());
-                return;
-            }
-            alGenBuffers(1, &buffer);
-            alBufferData(buffer, format, sf->getOpenAlData(), sf->getOpenAlDataSize(), sf->getSampleRate());
-            delete sf;
-            spdlog::info("[SNAKE] " + name + " loaded");
+            buffer = new Sound(content, size);
+            SPDLOG_INFO(name + " loaded");
         }
     };
 
@@ -100,38 +84,48 @@ void Snake::loadResources() {
     loadImage("body.png", BodyTexture);
     loadImage("wall.png", WallTexture);
     loadAudio("eat.wav", Eat);
-
-    alGenSources(1, &source);
-    alSourcei( source, AL_BUFFER, Eat);
 }
 void Snake::Reset() {
-    direction = Directions::Down;
+    direction = map->getDefaultSnakeDirection();
+    Score = 0;
     snake.clear();
-    for (int i = 1; i < map->getDefaultSnakeSize() + 1; ++i) {
-        snake.emplace_back(1, i, Directions::Down);
+    switch (map->getDefaultSnakeDirection()) {
+        case Up:
+            for (unsigned short i = map->getDefaultSnakeSize() + map->getDefaultSnakePos().y; i > map->getDefaultSnakePos().y; --i) {
+                snake.emplace_back(map->getDefaultSnakePos().x, i, map->getDefaultSnakeDirection());
+            }
+            break;
+        case Left:
+            for (unsigned short i = map->getDefaultSnakePos().y; i < map->getDefaultSnakeSize() + map->getDefaultSnakePos().y; ++i) {
+                snake.emplace_back(i, map->getDefaultSnakePos().x, map->getDefaultSnakeDirection());
+            }
+            break;
+        case Down:
+            for (unsigned short i = map->getDefaultSnakePos().y; i < map->getDefaultSnakeSize() + map->getDefaultSnakePos().y; ++i) {
+                snake.emplace_back(map->getDefaultSnakePos().x, i, map->getDefaultSnakeDirection());
+            }
+            break;
+        case Right:
+            for (unsigned short i = map->getDefaultSnakeSize() + map->getDefaultSnakePos().y; i > map->getDefaultSnakePos().y; --i) {
+                snake.emplace_back(i, map->getDefaultSnakePos().x, map->getDefaultSnakeDirection());
+            }
+            break;
     }
     ResetApple();
     lastTickTime = 0;
 }
-void Snake::ResetApple(unsigned short counter) {
-    counter--;
-    if (counter <= 0)
-    {
-        Apple = Coords(0);
-        spdlog::error("[SNAKE] Cannot place Apple. The counter is over");
-        return;
-    }
+void Snake::ResetApple() {
     Apple = Coords(std::rand() % map->getField().x + 1, std::rand() % map->getField().y + 1);
     for (auto& s : snake) {
         if (Apple == s)
         {
-            ResetApple(counter);
+            ResetApple();
             return;
         }
     }
     for (int i = 0; i < map->getMap().size(); ++i) {
         if (map->getMap()[i] == SnakeMap::Wall && Apple == Coords((i % map->getField().x) + 1, (i / map->getField().x) + 1)) {
-            ResetApple(counter);
+            ResetApple();
             return;
         }
     }
@@ -159,7 +153,7 @@ void Snake::MoveSnake(SnakeBody to) {
                 break;
             }
             default: {
-                spdlog::warn("[SNAKE] You forgot to add case, in crashed snake dialog");
+                SPDLOG_WARN("You forgot to add case, in crashed snake dialog");
                 loadMainMenu();
                 break;
             }
@@ -185,15 +179,8 @@ void Snake::MoveSnake(SnakeBody to) {
     if (tryTo == Apple)
     {
         ResetApple();
-        alSourcePlay( source);
-
-        ALint state = AL_PLAYING;
-
-        while(state == AL_PLAYING)
-        {
-            alGetSourcei( source, AL_SOURCE_STATE, &state);
-        }
-        //Eat->Play();
+        Eat->Play();
+        Score++;
     } else {
         snake.pop_back();
     }
@@ -211,19 +198,18 @@ void Snake::loop() {
             {
                 if (y%2==0)
                 {
-                    glColor4d(0., .5, 0., 1.);
+                    renderTile(Coords(x,y), new Texture(), {0., .5, 0., 1.});
                 } else {
-                    glColor4d(0., 1., 0., 1.);
+                    renderTile(Coords(x,y), new Texture(), {0., 1., 0., 1.});
                 }
             } else {
                 if (y%2==0)
                 {
-                    glColor4d(0., 1., 0., 1.);
+                    renderTile(Coords(x,y), new Texture(), {0., 1., 0., 1.});
                 } else {
-                    glColor4d(0., .5, 0., 1.);
+                    renderTile(Coords(x,y), new Texture(), {0., .5, 0., 1.});
                 } //TODO: БРЕД КАКОЙ ТО
             }
-            renderTile(Coords(x,y), {});
         }
     }
     for (unsigned int i = 0; i < map->getMap().size(); ++i) {
@@ -231,89 +217,135 @@ void Snake::loop() {
             case SnakeMap::None:
                 break;
             case SnakeMap::Wall: {
-                if (WallTexture->initImage == 0) { glColor4d(0,0,1., 1.); } else {glColor4d(1.,1.,1., 1.);}
-                glBindTexture(GL_TEXTURE_2D, WallTexture->initImage);
-                auto c = Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1);
-                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1));
+                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1), WallTexture, {0,0,1., 1.});
                 break;
             }
             default:
-                spdlog::warn("[SNAKE] Cannot find tile type in render");
+                SPDLOG_WARN("Cannot find tile type in render");
                 break;
         }
     }
-    if (HeadTexture->initImage == 0) { glColor4d(1.,0,0, 1.); } else {glColor4d(1.,1.,1., 1.);}
-    glBindTexture(GL_TEXTURE_2D, HeadTexture->initImage);
+#ifndef SNAKE_ANIMATION
     switch (snake.front().direction)
     {
         case Up:
-            renderTile(snake.front(), HeadTexture->texturecords);
+            HeadTexture->texturecords = texturecordsUp;
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
             break;
         case Left:
-            renderTile(snake.front(), {HeadTexture->texturecords[3], HeadTexture->texturecords[0], HeadTexture->texturecords[1], HeadTexture->texturecords[2]});
+            HeadTexture->texturecords = texturecordsLeft;
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
             break;
         case Down:
-            renderTile(snake.front(), {HeadTexture->texturecords[2], HeadTexture->texturecords[3], HeadTexture->texturecords[0], HeadTexture->texturecords[1]});
+            HeadTexture->texturecords = texturecordsDown;
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
             break;
         case Right:
-            renderTile(snake.front(), {HeadTexture->texturecords[1], HeadTexture->texturecords[2], HeadTexture->texturecords[3], HeadTexture->texturecords[0]});
+            HeadTexture->texturecords = texturecordsRight;
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
             break;
     }
-    if (BodyTexture->initImage == 0) { glColor4d(1.,0,0, 1.); } else {glColor4d(1.,1.,1., 1.);}
     for (int i = 1; i < snake.size() - 1; ++i) {
-        if (snake[i].direction != snake[i - 1].direction)
-        {
-            glBindTexture(GL_TEXTURE_2D, AngleTexture->initImage);
-            if ((snake[i].direction == Directions::Left && snake[i - 1].direction == Directions::Up) || (snake[i - 1].direction == Directions::Right && snake[i].direction == Directions::Down))
-            {
-                renderTile(snake[i], AngleTexture->texturecords);
-            } else if ((snake[i].direction == Directions::Right && snake[i - 1].direction == Directions::Up) || (snake[i - 1].direction == Directions::Left && snake[i].direction == Directions::Down))
-            {
-                renderTile(snake[i], {AngleTexture->texturecords[3], AngleTexture->texturecords[0], AngleTexture->texturecords[1], AngleTexture->texturecords[2]});
-            } else if ((snake[i].direction == Directions::Up && snake[i - 1].direction == Directions::Left) || (snake[i - 1].direction == Directions::Down && snake[i].direction == Directions::Right))
-            {
-                renderTile(snake[i], {AngleTexture->texturecords[2], AngleTexture->texturecords[3], AngleTexture->texturecords[0], AngleTexture->texturecords[1]});
-            } else if ((snake[i].direction == Directions::Up && snake[i - 1].direction == Directions::Right) || (snake[i - 1].direction == Directions::Down && snake[i].direction == Directions::Left))
-            {
-                renderTile(snake[i], {AngleTexture->texturecords[1], AngleTexture->texturecords[2], AngleTexture->texturecords[3], AngleTexture->texturecords[0]});
+#else
+    for (int i = 0; i < snake.size() - 1; ++i) {
+        if (i != 0) {
+#endif
+            if (snake[i].direction != snake[i - 1].direction) {
+                if ((snake[i].direction == Directions::Left && snake[i - 1].direction == Directions::Up) ||
+                    (snake[i - 1].direction == Directions::Right && snake[i].direction == Directions::Down)) {
+                    AngleTexture->texturecords = texturecordsUp;
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                } else if ((snake[i].direction == Directions::Right && snake[i - 1].direction == Directions::Up) ||
+                           (snake[i - 1].direction == Directions::Left && snake[i].direction == Directions::Down)) {
+                    AngleTexture->texturecords = texturecordsLeft;
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                } else if ((snake[i].direction == Directions::Up && snake[i - 1].direction == Directions::Left) ||
+                           (snake[i - 1].direction == Directions::Down && snake[i].direction == Directions::Right)) {
+                    AngleTexture->texturecords = texturecordsDown;
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                } else if ((snake[i].direction == Directions::Up && snake[i - 1].direction == Directions::Right) ||
+                           (snake[i - 1].direction == Directions::Down && snake[i].direction == Directions::Left)) {
+                    AngleTexture->texturecords = texturecordsRight;
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                }
+                continue;
             }
-            continue;
+#ifdef SNAKE_ANIMATION
         }
-        glBindTexture(GL_TEXTURE_2D, BodyTexture->initImage);
+#endif
         if (snake[i].direction == Directions::Right || snake[i].direction == Directions::Left) {
-            renderTile(snake[i], BodyTexture->texturecords);
+            BodyTexture->texturecords = texturecordsUp;
+            renderTile(snake[i], BodyTexture, {1.,0,0, 1.});
         } else {
-            renderTile(snake[i], {BodyTexture->texturecords[3], BodyTexture->texturecords[0], BodyTexture->texturecords[1], BodyTexture->texturecords[2]});
+            BodyTexture->texturecords = texturecordsLeft;
+            renderTile(snake[i], BodyTexture, {1.,0,0, 1.});
         }
     }
-    if (TailTexture->initImage == 0) {glColor4d(1.,0,0, 1.);} else {glColor4d(1.,1.,1., 1.);}
-    glBindTexture(GL_TEXTURE_2D, TailTexture->initImage);
     switch (snake[snake.size() - 2].direction)
     {
         case Up:
-            renderTile(snake.back(), TailTexture->texturecords);
+            TailTexture->texturecords = texturecordsUp;
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
             break;
         case Left:
-            renderTile(snake.back(), {TailTexture->texturecords[3], TailTexture->texturecords[0], TailTexture->texturecords[1], TailTexture->texturecords[2]});
+            TailTexture->texturecords = texturecordsLeft;
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
             break;
         case Down:
-            renderTile(snake.back(), {TailTexture->texturecords[2], TailTexture->texturecords[3], TailTexture->texturecords[0], TailTexture->texturecords[1]});
+            TailTexture->texturecords = texturecordsDown;
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
             break;
         case Right:
-            renderTile(snake.back(), {TailTexture->texturecords[1], TailTexture->texturecords[2], TailTexture->texturecords[3], TailTexture->texturecords[0]});
+            TailTexture->texturecords = texturecordsRight;
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
             break;
     }
-    glColor4d(1.,1.,1., 1.);
-    if (AppleTexture->initImage == 0 ) {glColor4d(.3,0,0, 1.);} else {glColor4d(1.,1.,1., 1.);}
-    glBindTexture(GL_TEXTURE_2D, AppleTexture->initImage);
-    renderTile(Apple, AppleTexture->texturecords);
-
+    renderTile(Apple, AppleTexture, {.3,0,0,1});
+#ifdef SNAKE_ANIMATION
+    auto move = ((((float) clock() / (float) CLOCKS_PER_SEC) - lastTickTime) / map->getTickSpeed()); //NORMALIZED
+    glColor4d(1., 0, 0, 1.);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    switch (direction) {
+        case Up:
+            glBegin(GL_QUADS);
+            glVertex2f((float) snake.front().x + 1.f, (float) snake.front().y + move);
+            glVertex2f((float) snake.front().x + 1.f, (float) snake.front().y + 1.f  + move);
+            glVertex2f((float) snake.front().x, (float) snake.front().y + 1.f + move);
+            glVertex2f((float) snake.front().x , (float) snake.front().y  + move);
+            glEnd();
+            break;
+        case Left:
+            glBegin(GL_QUADS);
+            glVertex2f((float) snake.front().x + 1.f + -move, (float) snake.front().y);
+            glVertex2f((float) snake.front().x + 1.f + -move, (float) snake.front().y + 1.f );
+            glVertex2f((float) snake.front().x + -move, (float) snake.front().y + 1.f);
+            glVertex2f((float) snake.front().x + -move, (float) snake.front().y );
+            glEnd();
+            break;
+        case Down:
+            glBegin(GL_QUADS);
+            glVertex2f((float) snake.front().x + 1.f, (float) snake.front().y + -move);
+            glVertex2f((float) snake.front().x + 1.f, (float) snake.front().y + 1.f  + -move);
+            glVertex2f((float) snake.front().x, (float) snake.front().y + 1.f + -move);
+            glVertex2f((float) snake.front().x , (float) snake.front().y  + -move);
+            glEnd();
+            break;
+        case Right:
+            glBegin(GL_QUADS);
+            glVertex2f((float) snake.front().x + 1.f + move, (float) snake.front().y);
+            glVertex2f((float) snake.front().x + 1.f + move, (float) snake.front().y + 1.f );
+            glVertex2f((float) snake.front().x + move, (float) snake.front().y + 1.f);
+            glVertex2f((float) snake.front().x + move, (float) snake.front().y );
+            glEnd();
+            break;
+    }
+#endif
+    Font::RenderText(std::to_string(Score), {2.,2.}, .05);
     // Swap the screen buffers
     glfwSwapBuffers(getwindow());
     //SERVER
-    if (lastTickTime + tickSpeed <= ((float) clock() / CLOCKS_PER_SEC)) {
+    if (lastTickTime + map->getTickSpeed() <= ((float) clock() / CLOCKS_PER_SEC)) {
         lastTickTime = ((float) clock() / CLOCKS_PER_SEC);
-
         switch(direction)
         {
             case Up:
@@ -329,24 +361,11 @@ void Snake::loop() {
                 MoveSnake(SnakeBody(1,0, direction));
                 break;
             default:
-                spdlog::warn("[SNAKE] Unknown direction in SnakeTimer");
+                SPDLOG_WARN("Unknown direction in SnakeTimer");
                 MoveSnake(SnakeBody(0,1, direction));
                 break;
         }
     }
-}
-
-void Snake::renderTile(Coords coords, std::array<glm::vec2, 4> v) {
-    glBegin(GL_QUADS);
-    glTexCoord2d(v[0].x, v[0].y);
-    glVertex2d(coords.x + 1,coords.y);
-    glTexCoord2d(v[1].x, v[1].y);
-    glVertex2d(coords.x + 1,coords.y + 1);
-    glTexCoord2d(v[2].x, v[2].y);
-    glVertex2d(coords.x,coords.y + 1);
-    glTexCoord2d(v[3].x, v[3].y);
-    glVertex2d(coords.x,coords.y);
-    glEnd();
 }
 
 void Snake::key_callback(int key, int scancode, int action, int mods) {
@@ -376,18 +395,12 @@ void Snake::key_callback(int key, int scancode, int action, int mods) {
                     return;
                 }
                 glfwSetWindowTitle(getwindow(), ("Snake. Opened map: ..." + path.substr(path.find_last_of('\\'),path.size() - path.find_last_of('\\'))).c_str());
-                map = SnakeMap::load(path);
-                if (map->getField().x <= 0 || map->getField().y <= 0)
+                auto m = SnakeMap::load(path);
+                if (m == nullptr)
                 {
-                    ErrorAbort("[SNAKE] field.x <= 0 || field.y <= 0")
-                }
-                if (map->getField().y != map->getField().x)
-                {
-                    ErrorAbort("[SNAKE] field.y != field.x, which is unsupported")
-                }
-                if (map->getDefaultSnakeSize() < 2)
-                {
-                    ErrorAbort("[SNAKE] DefaultSnakeSize < 2")
+                    boxer::show("Failed to open map", "Failed to open map", boxer::Style::Error);
+                } else {
+                    map = m;
                 }
                 Reset();
                 size_callback(getWidth(), getHeight());
@@ -401,24 +414,7 @@ void Snake::key_callback(int key, int scancode, int action, int mods) {
 }
 
 void Snake::size_callback(int width, int height) {
-    glViewport(0,0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    auto& screensize = map->getField();
-    double Shift = 0;
-    if ((float) width >= (float) height) {
-        Shift = (((float) width / (float) height) - ((float) screensize.x / (float) screensize.y)) * 5 - 1.;
-        glOrtho( -Shift, (float) screensize.x * ((float) width / (float) height) - Shift, 0. + 1, (float) screensize.y + 1, 0., 1.);
-    } else {
-        Shift = (((float) height / (float) width) - ((float) screensize.y / (float) screensize.x)) * 5 - 1.;
-        glOrtho(0. + 1, (float) screensize.x + 1, -Shift, (float) screensize.y * ((float) height / (float) width) - Shift, 0., 1.);
-    }
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-
-bool Snake::CheckCollision(Coords c, Coords s) {
-    return c == s;
+    TileEngine::size_callback(width, height, map->getField());
 }
 
 Snake::~Snake() {
@@ -428,7 +424,5 @@ Snake::~Snake() {
     delete AngleTexture;
     delete TailTexture;
     delete map;
-    //AUDIO
-    alDeleteSources( 1, &source);
-    alDeleteBuffers( 1, &Eat);
+    delete Eat;
 }

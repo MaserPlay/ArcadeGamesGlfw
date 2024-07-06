@@ -7,6 +7,8 @@
 
 #include "vector"
 #include "Context.h"
+//CPR
+#include "cpr/cpr.h"
 
 class ImguiContext : public Context{
     std::vector<BaseGame*> GameList {};
@@ -17,13 +19,19 @@ public:
 
     ~ImguiContext() override;
     void loop() override;
-#ifdef _DEBUG
-    bool ImguiDebugLog = false;
-#endif
-    bool ImguiAbout = false;
-    bool ImguiUGuide = false;
     void size_callback(int width, int height) override {}
     void key_callback(int key, int scancode, int action, int mods) override {}
+private:
+    void GetUpdateInfo (const cpr::Response& r);
+#ifdef _DEBUG
+    bool ImguiDebugLog = false;
+    bool ImguiDemo = false;
+#endif
+    std::string UpdateUrl;
+    bool ImguiAbout = false;
+    bool ImguiUGuide = false;
+    bool SendError = false;
+    std::string ErrorText;
 };
 
 

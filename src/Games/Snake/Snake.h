@@ -7,12 +7,8 @@
 
 
 #include <deque>
-#include "BaseGame.h"
-#include "Other.h"
-#include "Texture.h"
 #include "SnakeMap.h"
-// OPENAL
-#include <al.h>
+#include "TileEngine.h"
 
 struct SnakeBody : public Coords{
     SnakeBody(unsigned int xy, Directions direction) : Coords(xy), direction(direction) {}
@@ -22,7 +18,7 @@ struct SnakeBody : public Coords{
     Directions direction;
 };
 
-class Snake : public BaseGame {
+class Snake : public TileEngine {
 public:
     ~Snake() override;
 
@@ -32,19 +28,18 @@ public:
     void key_callback(int key, int scancode, int action, int mods) override;
 private:
     void loadResources();
-    bool CheckCollision(Coords c, Coords s);
     void MoveSnake(SnakeBody to);
-    void renderTile(Coords coords, std::array<glm::vec2, 4> v = {});
     void Reset();
-    void ResetApple(unsigned short counter = 306);
+    void ResetApple();
     std::deque<SnakeBody> snake {};
-    Directions direction = Directions::Down;
-    Coords Apple = {5,5};
+    Directions direction = Down;
+    Coords Apple;
     SnakeMap* map;
     // TEMP
     float lastTickTime;
-    //TICKS
-    float tickSpeed = .4; // s
+    int Score = 0;
+    //AUDIO
+    Sound* Eat = new Sound();
     // TEXTURES
     Texture* AngleTexture = new Texture();
     Texture* TailTexture = new Texture();
@@ -52,9 +47,11 @@ private:
     Texture* HeadTexture = new Texture();
     Texture* BodyTexture = new Texture();
     Texture* WallTexture = new Texture();
-    //AUDIO
-    ALuint Eat = 0;
-    ALuint source;
+    //TEXTURE COORDS
+    const std::array<glm::vec2, 4> texturecordsUp = {glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)};
+    const std::array<glm::vec2, 4> texturecordsLeft = {glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0)};
+    const std::array<glm::vec2, 4> texturecordsDown = {glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0)};
+    const std::array<glm::vec2, 4> texturecordsRight = {glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0)};
 };
 
 

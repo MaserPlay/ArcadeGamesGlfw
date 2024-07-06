@@ -132,9 +132,9 @@ public :
     ////////////////////////////////////////////////////////////
     void write(const Int16* data, std::size_t sampleCount);
 
-    short* getOpenAlData();
+    short* getOpenAlData() const;
 
-    int getOpenAlDataSize();
+    int getOpenAlDataSize() const;
 
 private :
 

@@ -12,23 +12,70 @@ SnakeMap* SnakeMap::load(const std::string& name) {
     if (str.is_open())
     {
         std::string word;
-        str >> word;
-        m->field.x = std::stoi(word);
-        str >> word;
-        m->field.y = std::stoi(word);
-        str >> word;
-        m->defaultSnakeSize = std::stoi(word);
-        str >> word;
-        m->Map.clear();
-        for (auto& e:word) {
-            m->Map.push_back(static_cast<Tile>((int) (e - '0')));
-        };
-        spdlog::info("{} loaded", name);
+        try {
+            str >> word;
+            m->field.x = std::stoi(word);
+            str >> word;
+            m->field.y = std::stoi(word);
+            str >> word;
+            m->DefaultSnakePos.x = std::stoi(word);
+            str >> word;
+            m->DefaultSnakePos.y = std::stoi(word);
+            str >> word;
+            m->DefaultSnakeDirection = static_cast<Directions>(std::stoi(word));
+            str >> word;
+            m->tickSpeed = std::stof(word);
+            str >> word;
+            m->defaultSnakeSize = std::stoi(word);
+            str >> word;
+            m->Map.clear();
+            for (auto& e:word) {
+                m->Map.push_back(static_cast<Tile>((int) (e - '0')));
+            };
+        } catch (const std::invalid_argument& ia) {
+            str.close();
+            SPDLOG_ERROR("Failed to open map std::invalid_argument");
+            return nullptr;
+        } catch (const std::out_of_range& oor) {
+            str.close();
+            SPDLOG_ERROR("Failed to open map std::out_of_range");
+            return nullptr;
+        }
+        SPDLOG_INFO("{} loaded", name);
     } else {
-        spdlog::warn("Cannot open {}", name);
+        SPDLOG_WARN("Cannot open {}", name);
         return nullptr;
     }
     str.close();
+    //CHECK
+    if (m->getField().x <= 0 || m->getField().y <= 0)
+    {
+        SPDLOG_ERROR("field.x <= 0 || field.y <= 0"); return nullptr;
+    }
+    if (m->getDefaultSnakePos().x <= 0 || m->getDefaultSnakePos().y <= 0)
+    {
+        SPDLOG_ERROR("DefaultSnakePos.x <= 0 || DefaultSnakePos.y <= 0"); return nullptr;
+    }
+    if (m->getDefaultSnakePos().x >= m->getField().x || m->getDefaultSnakePos().y >= m->getField().y)
+    {
+        SPDLOG_ERROR("m->getDefaultSnakePos().x >= m->getField().x || m->getDefaultSnakePos().y >= m->getField().y"); return nullptr;
+    }
+    if (m->getDefaultSnakeDirection() >= DIRECTION_LAST)
+    {
+        SPDLOG_ERROR("m->getDefaultSnakeDirection() >= DIRECTION_LAST"); return nullptr;
+    }
+    if (m->getField().y != m->getField().x)
+    {
+        SPDLOG_ERROR("field.y != field.x, which is unsupported"); return nullptr;
+    }
+    if (m->getDefaultSnakeSize() < 2)
+    {
+        SPDLOG_ERROR("DefaultSnakeSize < 2"); return nullptr;
+    }
+    if (m->getTickSpeed() <= 0)
+    {
+        SPDLOG_ERROR("TickSpeed < 2"); return nullptr;
+    }
     return m;
 }
 
@@ -43,13 +90,16 @@ void SnakeMap::save(const std::string &name, SnakeMap *map) {
     std::ofstream s(name);
     if (s.is_open())
     {
-        s << map->getField().x << ' ' << map->getField().y << ' ' << map->getDefaultSnakeSize() << ' ';
+        s << map->getField().x << ' ' << map->getField().y << ' '
+        << map->getDefaultSnakePos().x << ' ' << map->getDefaultSnakePos().y << ' '
+        << map->getDefaultSnakeDirection() << ' '
+        << map->getTickSpeed() << ' ' << map->getDefaultSnakeSize() << ' ';
         for (auto& m : map->getMap()) {
             s << m;
         }
-        spdlog::info("{} saved", name);
+        SPDLOG_INFO("{} saved", name);
         s.close();
     } else {
-        spdlog::warn("Cannot saved {}: !s.is_open()", name);
+        SPDLOG_WARN("Cannot saved {}: !s.is_open()", name);
     }
 }

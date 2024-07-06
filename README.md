@@ -2,7 +2,7 @@
 This is a small launcher, while developing which I am learning to work with Opengl, Openal and other libraries.
 Available games: [Snake](#snake)
 
-![launcher_demo_1.jpg](img/launcher_demo_1.jpg)
+![screenshot of launcher](img/launcher_demo_1.jpg)
 ## Cloning and compiling
 To clone this repository use 
 ```
@@ -40,7 +40,7 @@ In future I want to
 ### Snake
 This is first game, that I release.
 
-![snake_demo_1.jpg](img/snake_demo_1.jpg)
+![screenshot of snake game](img/snake_demo_1.jpg)
 
 Controlling:
 
@@ -55,5 +55,5 @@ Controlling:
 #### Future
 I want to
 - [ ] create animation to snake
-- [ ] Add a counter
+- [X] Add a counter
 - [ ] Redraw all assets

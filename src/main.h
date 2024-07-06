@@ -8,7 +8,9 @@
 #include "Context.h"
 #include "BaseGame.h"
 #include "string"
+#include "Font.h"
 
+Font::Font* getFont();
 GLFWwindow* getwindow();
 void setContext(Context* context);
 void loadMainMenu();

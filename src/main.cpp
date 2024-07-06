@@ -6,27 +6,33 @@
 
 // OPENAL
 #include <alc.h>
-#include <stb_image.h>
 
-#include "debug.h"
-#include "main.h"
+//LOG
+#include "LOG.h"
+#ifdef _DEBUG
+#include "spdlog/sinks/stdout_color_sinks.h"
+#else
+#include "spdlog/sinks/basic_file_sink.h"
+#include <stb_image.h>
+#endif
 //CONTEXT
 #include "ImguiContext.h"
 //MEMORY
 #include "memory"
 //OTHER
 #include "SystemAdapter.h"
-//LOG
-#ifdef _DEBUG
-#include "spdlog/sinks/stdout_color_sinks.h"
-#else
-#include "spdlog/sinks/basic_file_sink.h"
-#include <windows.h>
-#include <stb_image.h>
-
-#endif
-#include "spdlog/spdlog.h"
+//ARCHIVE
 #include "ZipArchive.h"
+//OTHER
+#include <stb_image.h>
+#include "debug.h"
+#include "main.h"
+#ifdef _WINDOWS
+#include <windows.h>
+#endif
+bool isContextInit = false;
+Font::Font* baseFont = nullptr;
+Font::Font* getFont(){return baseFont;}
 
 void window_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -54,14 +60,13 @@ Context* tempContext = NULL;
 void setContext(Context* context)
 {
     tempContext = currentContext;
-    context->init();
-    context->size_callback(WIDTH, HEIGHT);
+    isContextInit = false;
     currentContext = context;
 }
 
 void SetIcon(const std::string& name)
 {
-    spdlog::debug("loading Assets.zip && " + name);
+    SPDLOG_DEBUG("loading Assets.zip && " + name);
     if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
         ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
         char *content = NULL; zip_uint64_t size = 0;
@@ -73,12 +78,12 @@ void SetIcon(const std::string& name)
             GLFWimage e{ width, height, image};
             glfwSetWindowIcon(window, 1, &e);
             stbi_image_free(content);
-            spdlog::info(name + " loaded && applied");
+            SPDLOG_INFO(name + " loaded && applied");
         } else {
-            spdlog::warn(name + " not found");
+            SPDLOG_WARN(name + " not found");
         }
     } else {
-        spdlog::warn("Assets.zip not found");
+        SPDLOG_WARN("Assets.zip not found");
     }
 }
 void loadMainMenu()
@@ -102,8 +107,7 @@ int main()
         // create a color multi-threaded logger
         auto console = spdlog::stdout_color_mt("console");
         auto err_logger = spdlog::stderr_color_mt("stderr");
-        spdlog::set_level(spdlog::level::debug); // Set global log level to debug
-        spdlog::set_pattern("[%^%l%$] %v");
+        spdlog::set_level(spdlog::level::trace);
     }
     catch (const spdlog::spdlog_ex &ex)
     {
@@ -111,14 +115,17 @@ int main()
     }
 #else
     auto logger = spdlog::basic_logger_mt("logger", "logs/log.txt");
-    spdlog::set_level(spdlog::level::info); // Set global log level to debug3
+//    spdlog::set_level(spdlog::level::info); // Set global log level to debug3
     spdlog::set_default_logger(logger);
 #endif
-    spdlog::debug("Starting...");
+    spdlog::set_pattern("%s:%# [%^%l%$] %v");
+    SPDLOG_DEBUG("Starting...");
     // Init GLFW
     glfwInit();
     //Init
     SystemAdapter::Init();
+    //INIT FONT LIB
+    Font::InitLib();
     // Init OpenAl
     Aldevice = alcOpenDevice(nullptr);
     AlContext = alcCreateContext(Aldevice, nullptr);
@@ -146,6 +153,23 @@ int main()
         return -1;
     }
 
+    //DEFALT FONT
+    SPDLOG_DEBUG("loading Assets.zip && font.ttf");
+    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
+        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+        char *content = NULL; zip_uint64_t size = 0;
+        zip.get("font.ttf", content, size);
+        if (content != NULL) {
+            baseFont = new Font::Font(reinterpret_cast<const FT_Byte *>(content), size);
+            SPDLOG_INFO("font.ttf loaded && applied");
+        } else {
+            SPDLOG_WARN("font.ttf not found");
+        }
+    } else {
+        SPDLOG_WARN("Assets.zip not found");
+    }
+//    baseFont = new Font::Font("arial.ttf");
+
     // Define the viewport dimensions
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -154,6 +178,10 @@ int main()
     glfwSetKeyCallback(window, key_callback);
 
     loadMainMenu();
+    //INIT IT
+    currentContext->init();
+    currentContext->size_callback(WIDTH, HEIGHT);
+    isContextInit = true;
 
     //CHECK CONTEXT
     if (currentContext == NULL)
@@ -164,13 +192,21 @@ int main()
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
-        currentContext->loop();
-        if (tempContext != NULL) {
-            delete tempContext;
-            tempContext = NULL;
+        if (isContextInit) {
+            currentContext->loop();
+        } else {
+            if (tempContext != NULL) {
+                delete tempContext;
+                tempContext = NULL;
+                if (!isContextInit) {
+                    isContextInit = true;
+                    currentContext->init();
+                    currentContext->size_callback(WIDTH, HEIGHT);
+                }
+            }
         }
     }
-    spdlog::debug("Closing...");
+    SPDLOG_DEBUG("Closing...");
 
     delete currentContext;
     SystemAdapter::Destroy();
@@ -193,5 +229,5 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 void error_callback(int code, const char *description)
 {
-    spdlog::error("GLFW error was occuruped" + std::string(description) + " with code" + std::to_string(code));
+    SPDLOG_ERROR("GLFW error was occuruped" + std::string(description) + " with code" + std::to_string(code));
 }

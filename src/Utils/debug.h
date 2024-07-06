@@ -7,21 +7,21 @@
 
 #include "boxer/boxer.h"
 #include <iostream>
-#include "spdlog/spdlog.h"
+#include "LOG.h"
 #define Info(why) boxer::show(why, "Info", boxer::Style::Info);
 
 //#define Warning(why) boxer::show(why, "Warning!", boxer::Style::Warning);
 #ifdef _DEBUG
-#define Error(why) boxer::show(why, "Error", boxer::Style::Error);
+#define ErrorBox(why) boxer::show(why, "ErrorBox", boxer::Style::Error);
 #define Print(text) std::cout << text << std::endl;
 #else
-#define Error(why)
+#define ErrorBox(why)
 #define Print(text)
 #endif
 
-#define ErrorThrowExs(why, exs) spdlog::error(why); throw exs(why);
+#define ErrorThrowExs(why, exs) SPDLOG_CRITICAL(why); throw exs(why);
 #define ErrorThrow(why) ErrorThrowExs(why, std::exception)
 
-#define ErrorAbort(why) spdlog::error(why); abort();
+#define ErrorAbort(why) SPDLOG_CRITICAL(why); abort();
 
 #endif //ARCADEGAMESGLFW_DEBUG_H
