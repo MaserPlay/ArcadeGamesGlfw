@@ -64,7 +64,6 @@ void ImguiContext::GetUpdateInfo(const cpr::Response& r) {
 }
 
 void ImguiContext::loop() {
-    glfwWaitEvents();
 
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -244,6 +243,7 @@ void ImguiContext::loop() {
 
     // Swap the screen buffers
     glfwSwapBuffers(getwindow());
+    glfwWaitEvents();
 }
 
 ImguiContext::~ImguiContext() {

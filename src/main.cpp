@@ -27,6 +27,8 @@
 #include <stb_image.h>
 #include "debug.h"
 #include "main.h"
+#include "IntroContext.h"
+
 #ifdef _WINDOWS
 #include <windows.h>
 #endif
@@ -55,8 +57,8 @@ GLFWwindow* getwindow()
 {
     return window;
 }
-Context* currentContext = NULL;
-Context* tempContext = NULL;
+Context* currentContext;
+Context* tempContext;
 void setContext(Context* context)
 {
     tempContext = currentContext;
@@ -177,11 +179,11 @@ int main()
     glfwSetWindowSizeLimits(window, 400,400, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetKeyCallback(window, key_callback);
 
-    loadMainMenu();
+    setContext(new IntroContext());
     //INIT IT
+    isContextInit = true;
     currentContext->init();
     currentContext->size_callback(WIDTH, HEIGHT);
-    isContextInit = true;
 
     //CHECK CONTEXT
     if (currentContext == NULL)

@@ -12,6 +12,7 @@
 #include "stb_image.h"
 //ARCHIVE
 #include "ZipArchive.h"
+//SOUND
 #include "SoundFile.hpp"
 
 void Snake::init() {
@@ -37,11 +38,12 @@ void Snake::init() {
 
 void Snake::loadResources() {
     SPDLOG_INFO("Start loading resources...");
-    if (!std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip")){
+    auto zippath = SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip";
+    if (!std::filesystem::is_regular_file(zippath)){
         SPDLOG_WARN("archive with resources {} not found", SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
         return;
     }
-    auto archive = ZipArchive(SystemAdapter::GetGameFolderName("Snake") + "Snake_resources.zip");
+    auto archive = ZipArchive(zippath);
     char *content = NULL; zip_uint64_t size;
     unsigned char *image = NULL; int width, height, nrChannels;
 
