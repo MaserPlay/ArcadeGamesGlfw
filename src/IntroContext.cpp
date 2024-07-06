@@ -30,7 +30,7 @@ void IntroContext::init() {
     SetIcon("intro_icon.png");
     loadResources();
     loadSnakeResources();
-    StartTime = ((float) clock() / CLOCKS_PER_SEC);
+    t = std::thread(InitAsync);
     //INIT SNAKES
     for (short i = 0; i < 9; ++i) {
         Snakes[0].emplace_back(6, i, Directions::Down);
@@ -44,6 +44,7 @@ void IntroContext::init() {
     for (short i = -2; i > -13; --i) {
         Snakes[3].emplace_back(i, 1, Directions::Right);
     }
+    StartTime = ((float) clock() / CLOCKS_PER_SEC);
 }
 
 void IntroContext::loadResources() {
@@ -350,6 +351,9 @@ void IntroContext::key_callback(int key, int scancode, int action, int mods) {
 }
 
 void IntroContext::SkipIntro() {
+    if (t.joinable()) {
+        t.join();
+    }
     loadMainMenu();
 }
 

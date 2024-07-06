@@ -92,6 +92,26 @@ void loadMainMenu()
 {
     setContext(new ImguiContext());
 }
+void InitAsync()
+{
+    //DEFALT FONT
+    SPDLOG_DEBUG("loading Assets.zip && font.ttf");
+    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
+        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+        char *content = NULL; zip_uint64_t size = 0;
+        zip.get("font.ttf", content, size);
+        if (content != NULL) {
+            baseFont = new Font::Font(reinterpret_cast<const FT_Byte *>(content), size);
+            SPDLOG_INFO("font.ttf loaded && applied");
+        } else {
+            SPDLOG_WARN("font.ttf not found");
+        }
+    } else {
+        SPDLOG_WARN("Assets.zip not found");
+    }
+//    baseFont = new Font::Font("arial.ttf");
+
+}
 
 // The MAIN function, from here we start the application and run the game loop
 #ifdef DO_WINMAIN
@@ -154,23 +174,6 @@ int main()
         ErrorAbort("Failed to initialize GLEW")
         return -1;
     }
-
-    //DEFALT FONT
-    SPDLOG_DEBUG("loading Assets.zip && font.ttf");
-    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
-        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
-        char *content = NULL; zip_uint64_t size = 0;
-        zip.get("font.ttf", content, size);
-        if (content != NULL) {
-            baseFont = new Font::Font(reinterpret_cast<const FT_Byte *>(content), size);
-            SPDLOG_INFO("font.ttf loaded && applied");
-        } else {
-            SPDLOG_WARN("font.ttf not found");
-        }
-    } else {
-        SPDLOG_WARN("Assets.zip not found");
-    }
-//    baseFont = new Font::Font("arial.ttf");
 
     // Define the viewport dimensions
     int width, height;

@@ -35,6 +35,8 @@ private:
     void loadSnakeResources();
     void SkipIntro();
     glm::vec<2, int> screensize {8,8};
+    //THREAD
+    std::thread t;
     //SNAKES
     std::vector<std::deque<SnakeBodyUpdated>> Snakes {{}, {}, {}, {}};
     //TEMP

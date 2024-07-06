@@ -17,5 +17,6 @@ void loadMainMenu();
 GLuint getWidth();
 GLuint getHeight();
 void SetIcon(const std::string& name);
+void InitAsync();
 
 #endif //ARCADEGAMESGLFW_MAIN_H
