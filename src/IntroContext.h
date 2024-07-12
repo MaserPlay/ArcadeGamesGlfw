@@ -31,14 +31,18 @@ public:
 
     void size_callback(int width, int height) override;
 
-    void key_callback(int key, int scancode, int action, int mods) override;
+    void key_callback(int key, int scancode, int action, int mods) override {};
+    void cursor_position_callback(double xpos, double ypos) override {}
+
+    void mouse_button_callback(int button, int action, int mods) override {}
+
 private:
     void loadResources();
     void loadSnakeResources();
     void SkipIntro();
     glm::vec<2, int> screensize {8,8};
     //THREAD
-    std::thread t;
+//    std::thread t;
     //SNAKES
     std::vector<std::deque<SnakeBodyUpdated>> Snakes {{}, {}, {}, {}};
     //TEMP

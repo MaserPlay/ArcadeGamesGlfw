@@ -21,16 +21,16 @@
 
 
 void IntroContext::init() {
+    SetIcon("intro_icon.png");
     glEnable(GL_TEXTURE_2D);
 //    glEnable(GL_ALPHA_TEST);
 //    glAlphaFunc(GL_GREATER, 0.1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glLoadIdentity();
-    SetIcon("intro_icon.png");
     loadResources();
     loadSnakeResources();
-    t = std::thread(InitAsync);
+//    t = std::thread(InitAsync);
     //INIT SNAKES
     for (short i = 0; i < 9; ++i) {
         Snakes[0].emplace_back(6, i, Directions::Down);
@@ -72,7 +72,7 @@ void IntroContext::loadResources() {
                 texture = new Texture(image, width, height);
             } else if (nrChannels == 3)
             {
-                texture = new Texture(image, width, height, Texture::Modes::RGB);
+                texture = new Texture(image, width, height, Texture::Colors::RGB);
             } else {
                 SPDLOG_WARN("{} have {} channels. What is undefined", name, nrChannels);
             }
@@ -119,7 +119,7 @@ void IntroContext::loadSnakeResources() {
                 texture = new Texture(image, width, height);
             } else if (nrChannels == 3)
             {
-                texture = new Texture(image, width, height, Texture::Modes::RGB);
+                texture = new Texture(image, width, height, Texture::Colors::RGB);
             } else {
                 SPDLOG_WARN("{} have {} channels. What is undefined", name, nrChannels);
             }
@@ -278,7 +278,8 @@ void IntroContext::loop() {
     if ((int) (((float) clock() / CLOCKS_PER_SEC) - StartTime)%2==1)
     {
 //        SPDLOG_TRACE(((float) clock() / CLOCKS_PER_SEC) - StartTime);
-        glColor4d(1.,1.,1., 1.);
+        Font::RenderText("Present", {-5,-6.5}, 0, .045, {0, 0, 0, 1.});
+        /*glColor4d(1.,1.,1., 1.);
         glBindTexture(GL_TEXTURE_2D, PresentsTexture->getInitImage());
         glBegin(GL_QUADS);
         glTexCoord2d(LogoTexture->texturecords[0].x, LogoTexture->texturecords[0].y);
@@ -289,7 +290,7 @@ void IntroContext::loop() {
         glVertex2d(-5,(((float) PresentsTexture->getHeight() / (float) PresentsTexture->getWidth()) * 5) - 6);
         glTexCoord2d(LogoTexture->texturecords[3].x, LogoTexture->texturecords[3].y);
         glVertex2d(-5,(((float) PresentsTexture->getHeight() / (float) PresentsTexture->getWidth()) * -5) - 6);
-        glEnd();
+        glEnd();*/
     }
 
     if (StartTime + IntroDuration <= ((float) clock() / CLOCKS_PER_SEC))
@@ -346,14 +347,7 @@ void IntroContext::size_callback(int width, int height) {
     glMatrixMode(GL_MODELVIEW);
 }
 
-void IntroContext::key_callback(int key, int scancode, int action, int mods) {
-
-}
-
 void IntroContext::SkipIntro() {
-    if (t.joinable()) {
-        t.join();
-    }
     loadMainMenu();
 }
 
@@ -373,9 +367,9 @@ void IntroContext::renderTile(glm::vec<2, short> coords, Texture *t, glm::vec4 c
 }
 
 IntroContext::~IntroContext() {
-    if (t.joinable()) {
-        t.join();
-    }
+//    if (t.joinable()) {
+//        t.join();
+//    }
 }
 
 #undef IntroDuration

@@ -27,8 +27,8 @@ public:
         return Map;
     }
 
-    [[nodiscard]] const glm::vec<2, unsigned int> &getGhostSpawnZone() const {
-        return GhostSpawnZone;
+    [[nodiscard]] const glm::vec<2, unsigned int> &getStartPos() const {
+        return StartPos;
     }
 
     static PacmanMap* load(const std::string& name);
@@ -37,7 +37,7 @@ public:
 
 private:
     glm::vec<2, unsigned int> field {10};
-    glm::vec<2, unsigned int> GhostSpawnZone {0};
+    glm::vec<2, unsigned int> StartPos {2};
     std::vector<Tile> Map {};
 };
 

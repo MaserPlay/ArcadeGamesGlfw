@@ -9,6 +9,9 @@
 //#include FT_GLYPH_H
 #include "Texture.h"
 
+//GLM
+#include "glm/vec4.hpp"
+
 
 #include <cstddef>
 #include <map>
@@ -66,7 +69,7 @@ namespace Font {
     };
     void InitLib();
     void Destroy();
-    void RenderText(const std::string& text, glm::vec2 pos, float size);
+    void RenderText(const std::string& text, glm::vec2 pos, double z = 0 , float size = 1, glm::vec<4, double> color = {1., 1., 1., 1.});
     class Font final {
     public:
         virtual ~Font();

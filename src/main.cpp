@@ -28,6 +28,7 @@
 #include "debug.h"
 #include "main.h"
 #include "IntroContext.h"
+#include "Localization.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -35,10 +36,16 @@
 bool isContextInit = false;
 Font::Font* baseFont = nullptr;
 Font::Font* getFont(){return baseFont;}
+#ifndef DO_WINMAIN
+    bool skipintro = false;
+    bool genlangfile = false;
+#endif
 
 void window_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void error_callback(int code, const char *description);
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 // Window dimensions
 GLuint WIDTH = 800, HEIGHT = 600;
@@ -109,15 +116,13 @@ void InitAsync()
     } else {
         SPDLOG_WARN("Assets.zip not found");
     }
-//    baseFont = new Font::Font("arial.ttf");
-
 }
 
 // The MAIN function, from here we start the application and run the game loop
 #ifdef DO_WINMAIN
 int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 #else
-int main()
+int main(int argc, char** argv)
 #endif
 {
     //Create Log
@@ -136,16 +141,32 @@ int main()
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
 #else
-    auto logger = spdlog::basic_logger_mt("logger", "logs/log.txt");
+    auto logger = spdlog::basic_logger_mt("logger", "logs/latest.log");
 //    spdlog::set_level(spdlog::level::info); // Set global log level to debug3
     spdlog::set_default_logger(logger);
 #endif
     spdlog::set_pattern("%s:%# [%^%l%$] %v");
     SPDLOG_DEBUG("Starting...");
+#ifndef DO_WINMAIN
+    for (int i = 0; i < argc; ++i) {
+        if (std::string(argv[i]) == "skipintro")
+        {
+            skipintro = true;
+        } else if (std::string(argv[i]) == "genlang") {
+            genlangfile = true;
+        }
+    }
+#endif
     // Init GLFW
     glfwInit();
     //Init
     SystemAdapter::Init();
+    Localization::init();
+#ifdef _DEBUG
+    if (genlangfile) {
+        Localization::writefile();
+    }
+#endif
     //INIT FONT LIB
     Font::InitLib();
     // Init OpenAl
@@ -181,8 +202,24 @@ int main()
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetWindowSizeLimits(window, 400,400, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
+    InitAsync();
+#if defined(_DEBUG) && !defined(DO_WINMAIN)
+    if (skipintro) {
+//        std::thread t{InitAsync};
+//        if (t.joinable()) {
+//            t.join();
+//        }
+        SPDLOG_DEBUG("intro_skipped");
+        loadMainMenu();
+    } else {
+        setContext(new IntroContext());
+    }
+#else
     setContext(new IntroContext());
+#endif
     //INIT IT
     isContextInit = true;
     currentContext->init();
@@ -212,6 +249,11 @@ int main()
         }
     }
     SPDLOG_DEBUG("Closing...");
+#ifdef _DEBUG
+    if (genlangfile) {
+        Localization::genfile();
+    }
+#endif
 
     delete currentContext;
     SystemAdapter::Destroy();
@@ -232,7 +274,28 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     currentContext->key_callback(key, scancode, action, mods);
 }
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    currentContext->mouse_button_callback(button, action, mods);
+}
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    currentContext->cursor_position_callback(xpos, ypos);
+}
 void error_callback(int code, const char *description)
 {
     SPDLOG_ERROR("GLFW error was occuruped" + std::string(description) + " with code" + std::to_string(code));
+}
+bool fullscreen = false;
+void SwitchFullscreen(){
+    if (fullscreen)
+    {
+        glfwSetWindowMonitor(window, NULL, 100, 100, 800, 600, NULL);
+        fullscreen = false;
+    } else {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+        glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+        fullscreen = true;
+    }
 }

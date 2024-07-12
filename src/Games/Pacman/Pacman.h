@@ -8,12 +8,13 @@
 #include "BaseGame.h"
 #include "Other.h"
 #include "Texture.h"
+#include "TileEngine.h"
 // OPENAL
 #include <al.h>
 
 class PacmanMap;
 
-class Pacman : public BaseGame {
+class Pacman : public TileEngine {
 public:
     ~Pacman() override;
 
@@ -21,12 +22,17 @@ public:
     void loop() override;
     void size_callback(int width, int height) override;
     void key_callback(int key, int scancode, int action, int mods) override;
+    void cursor_position_callback(double xpos, double ypos) override;
+
+    void mouse_button_callback(int button, int action, int mods) override;
+
 private:
     void loadResources();
-    bool CheckCollision(Coords c, Coords s);
-    void renderTile(Coords coords, std::array<glm::vec2, 4> v = {});
+    bool CheckCollision(Coords c);
     void Reset();
-    Directions direction = Directions::Down;
+    Coords pacmanPos;
+    std::vector<Coords> MoventGrid {};
+    Directions direction = Directions::Left;
     PacmanMap* map;
     // TEMP
     float lastTickTime;

@@ -13,31 +13,31 @@
 
 class Texture final {
 public:
-    enum class Modes{
+    enum class Colors{
         RGBA,
         RGB,
         ALPHA_WHITE,
         RED
     };
+    enum class Wrapping{
+        NONE,
+        REPEAT,
+        MIRRORED_REPEAT,
+        CLAMP_TO_EDGE,
+        CLAMP_TO_BORDER
+    };
+    enum class Filtering{
+        NONE,
+        NEAREST,
+        LINEAR
+    };
     Texture() = default;
 
-    Texture(const unsigned char* image, int width, int height, Modes modes = Modes::RGBA) : isUseFiltering(false), mode(modes)
-            , isUseWrapping(false), image(image), width(width), height(height), WrappingMode(GL_REPEAT), FilteringMode(GL_NEAREST), initImage(NULL), texturecords({glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)}) {
+    Texture(const unsigned char* image, int width, int height, Colors modes = Colors::RGBA, Wrapping WrappingMode = Wrapping::REPEAT, Filtering FilteringMode = Filtering::LINEAR, Filtering MipmapMode = Filtering::LINEAR) : isUseFiltering(false), mode(modes)
+            , isUseWrapping(false), image(image), MipmapMode(MipmapMode), width(width), height(height), FilteringMode(FilteringMode), WrappingMode(WrappingMode), initImage(NULL), texturecords({glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)}) {
         if (image == nullptr){
             SPDLOG_WARN("texture == NULL");
         }
-    }
-   // explicit Texture(wxImage* image, Modes modes = Modes::RGBA) : Texture(image->GetData(),image->GetWidth(),image->GetHeight(), modes){}
-
-    Texture* useWrapping(int mode = GL_REPEAT)
-    {
-        WrappingMode = mode;
-        return this;
-    }
-    Texture* useFiltering(int mode = GL_NEAREST)
-    {
-        FilteringMode = mode;
-        return this;
     }
     std::array<glm::vec2, 4> texturecords {glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)};
 
@@ -45,48 +45,50 @@ public:
 
     void Load();
 
-    int getWidth() const {
+    [[nodiscard]] int getWidth() const {
         return width;
     }
 
-    int getHeight() const {
+    [[nodiscard]] int getHeight() const {
         return height;
     }
 
-    unsigned int getInitImage() const {
+    [[nodiscard]] unsigned int getInitImage() const {
         return initImage;
     }
 
-    Modes getMode() const {
+    [[nodiscard]] Colors getMode() const {
         return mode;
     }
 
-    const unsigned char *getImage() const {
+    [[nodiscard]] const unsigned char *getImage() const {
         return image;
     }
 
-    int getWrappingMode() const {
+    [[nodiscard]] Wrapping getWrappingMode() const {
         return WrappingMode;
     }
 
-    int getFilteringMode() const {
+    [[nodiscard]] Filtering getFilteringMode() const {
         return FilteringMode;
     }
 
-    bool isUseWrapping1() const {
+    [[nodiscard]] bool isUseWrapping1() const {
         return isUseWrapping;
     }
 
-    bool isUseFiltering1() const {
+    [[nodiscard]] bool isUseFiltering1() const {
         return isUseFiltering;
     }
 
 private:
     int width{}, height{};
     unsigned int initImage = 0;
-    Modes mode = Modes::RGBA;
+    Colors mode = Colors::RGBA;
     const unsigned char* image{};
-    int WrappingMode{}, FilteringMode{};
+    Wrapping WrappingMode = Wrapping::REPEAT;
+    Filtering FilteringMode = Filtering::LINEAR;
+    Filtering MipmapMode = Filtering::LINEAR;
     bool isUseWrapping{}, isUseFiltering{};
 };
 

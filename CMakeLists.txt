@@ -6,8 +6,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 
-add_compile_definitions(APPVERSION=1.1)
-add_compile_definitions(APPVERSIONCODE=2)
+add_compile_definitions(APPVERSION=1.2)
+add_compile_definitions(APPVERSIONCODE=3)
 add_compile_definitions(APPNAME="${PROJECT_NAME}")
 add_compile_definitions(APPAUTHOR="MaserPlay")
 
@@ -32,9 +32,9 @@ find_package(Freetype REQUIRED)
 find_package(cpr CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
-include_directories(${PROJECT_NAME} src/ src/Games/Snake/ src/Games/TileEngine/ src/Games/Base/#[[ src/Games/Pacman/]] src/Utils/)
+include_directories(${PROJECT_NAME} src/ src/Games/Snake/ src/Games/TileEngine/ src/Games/Base/ src/Games/Pacman/ src/Utils/)
 
-file(GLOB cpps src/*.cpp src/Utils/*.cpp src/Games/Snake/*.cpp src/Games/TileEngine/*.cpp#[[ src/Games/Pacman/*.cpp]] src/Games/Base/*.cpp)
+file(GLOB cpps src/*.cpp src/Utils/*.cpp src/Games/Snake/*.cpp src/Games/TileEngine/*.cpp src/Games/Pacman/*.cpp src/Games/Base/*.cpp)
 
 add_subdirectory(third_party/Boxer)
 add_subdirectory(third_party/nativefiledialog-extended)

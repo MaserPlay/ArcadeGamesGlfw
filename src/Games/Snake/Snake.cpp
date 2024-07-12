@@ -14,16 +14,17 @@
 #include "ZipArchive.h"
 //SOUND
 #include "SoundFile.hpp"
+#include "Localization.h"
 
 void Snake::init() {
     glfwSetWindowTitle(getwindow(), "Snake");
     SetIcon("snake_icon.png");
-    Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
+//    Info("I - info about game\nO - open map\nEsc- Exit game\nWASD - movement")
 
     map = SnakeMap::load(SystemAdapter::GetGameFolderName("Snake") + "Default.smap");
     if (map == nullptr)
     {
-        if (boxer::show("Failed to open default map. Regenerate it?", "Failed to open map", boxer::Style::Error, boxer::Buttons::YesNo) == boxer::Selection::No)
+        if (boxer::show(_c("Failed to open default map. Regenerate it?"), _c("Failed to open map"), boxer::Style::Error, boxer::Buttons::YesNo) == boxer::Selection::No)
         {
             loadMainMenu();
             return;
@@ -60,7 +61,7 @@ void Snake::loadResources() {
                 texture = new Texture(image, width, height);
             } else if (nrChannels == 3)
             {
-                texture = new Texture(image, width, height, Texture::Modes::RGB);
+                texture = new Texture(image, width, height, Texture::Colors::RGB);
             } else {
                 SPDLOG_WARN("{} have {} channels. What is undefined", name, nrChannels);
             }
@@ -145,7 +146,7 @@ void Snake::MoveSnake(SnakeBody to) {
     else if (tryTo.x >= map->getField().x + 1)
         tryTo.x = 1;
     auto crash = [=](){
-        switch (boxer::show("The snake crashed into an obstacle. Do you want to reset field?", "The snake crashed into an obstacle", boxer::Buttons::YesNo)) {
+        switch (boxer::show(_c("The snake crashed into an obstacle. Do you want to reset field?"), _c("The snake crashed into an obstacle"), boxer::Buttons::YesNo)) {
             case boxer::Selection::Yes: {
                 Reset();
                 break;
@@ -191,35 +192,37 @@ void Snake::MoveSnake(SnakeBody to) {
 
 void Snake::loop() {
     glfwPollEvents();
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0,0,0,1);
     glBindTexture(GL_TEXTURE_2D, 0);
+    //GRID
     for (int x = 1; x < map->getField().x + 1; ++x) {
         for (int y = 1; y < map->getField().y + 1; ++y) {
             if (x%2==0)
             {
                 if (y%2==0)
                 {
-                    renderTile(Coords(x,y), new Texture(), {0., .5, 0., 1.});
+                    renderTile(Coords(x,y), new Texture(), {0., .5, 0., 1.}, -1);
                 } else {
-                    renderTile(Coords(x,y), new Texture(), {0., 1., 0., 1.});
+                    renderTile(Coords(x,y), new Texture(), {0., 1., 0., 1.}, -1);
                 }
             } else {
                 if (y%2==0)
                 {
-                    renderTile(Coords(x,y), new Texture(), {0., 1., 0., 1.});
+                    renderTile(Coords(x,y), new Texture(), {0., 1., 0., 1.}, -1);
                 } else {
-                    renderTile(Coords(x,y), new Texture(), {0., .5, 0., 1.});
+                    renderTile(Coords(x,y), new Texture(), {0., .5, 0., 1.}, -1);
                 } //TODO: БРЕД КАКОЙ ТО
             }
         }
     }
+
     for (unsigned int i = 0; i < map->getMap().size(); ++i) {
         switch (map->getMap()[i]) {
             case SnakeMap::None:
                 break;
             case SnakeMap::Wall: {
-                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1), WallTexture, {0,0,1., 1.});
+                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1), WallTexture, {0,0,1., 1.}, 0);
                 break;
             }
             default:
@@ -232,19 +235,19 @@ void Snake::loop() {
     {
         case Up:
             HeadTexture->texturecords = texturecordsUp;
-            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.}, 0);
             break;
         case Left:
             HeadTexture->texturecords = texturecordsLeft;
-            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.}, 0);
             break;
         case Down:
             HeadTexture->texturecords = texturecordsDown;
-            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.}, 0);
             break;
         case Right:
             HeadTexture->texturecords = texturecordsRight;
-            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.});
+            renderTile(snake.front(), HeadTexture, {1.,0,0, 1.}, 0);
             break;
     }
     for (int i = 1; i < snake.size() - 1; ++i) {
@@ -256,19 +259,19 @@ void Snake::loop() {
                 if ((snake[i].direction == Directions::Left && snake[i - 1].direction == Directions::Up) ||
                     (snake[i - 1].direction == Directions::Right && snake[i].direction == Directions::Down)) {
                     AngleTexture->texturecords = texturecordsUp;
-                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.}, 0);
                 } else if ((snake[i].direction == Directions::Right && snake[i - 1].direction == Directions::Up) ||
                            (snake[i - 1].direction == Directions::Left && snake[i].direction == Directions::Down)) {
                     AngleTexture->texturecords = texturecordsLeft;
-                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.}, 0);
                 } else if ((snake[i].direction == Directions::Up && snake[i - 1].direction == Directions::Left) ||
                            (snake[i - 1].direction == Directions::Down && snake[i].direction == Directions::Right)) {
                     AngleTexture->texturecords = texturecordsDown;
-                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.}, 0);
                 } else if ((snake[i].direction == Directions::Up && snake[i - 1].direction == Directions::Right) ||
                            (snake[i - 1].direction == Directions::Down && snake[i].direction == Directions::Left)) {
                     AngleTexture->texturecords = texturecordsRight;
-                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.});
+                    renderTile(snake[i], AngleTexture, {1., 0, 0, 1.}, 0);
                 }
                 continue;
             }
@@ -277,32 +280,32 @@ void Snake::loop() {
 #endif
         if (snake[i].direction == Directions::Right || snake[i].direction == Directions::Left) {
             BodyTexture->texturecords = texturecordsUp;
-            renderTile(snake[i], BodyTexture, {1.,0,0, 1.});
+            renderTile(snake[i], BodyTexture, {1.,0,0, 1.}, 0);
         } else {
             BodyTexture->texturecords = texturecordsLeft;
-            renderTile(snake[i], BodyTexture, {1.,0,0, 1.});
+            renderTile(snake[i], BodyTexture, {1.,0,0, 1.}, 0);
         }
     }
     switch (snake[snake.size() - 2].direction)
     {
         case Up:
             TailTexture->texturecords = texturecordsUp;
-            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.}, 0);
             break;
         case Left:
             TailTexture->texturecords = texturecordsLeft;
-            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.}, 0);
             break;
         case Down:
             TailTexture->texturecords = texturecordsDown;
-            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.}, 0);
             break;
         case Right:
             TailTexture->texturecords = texturecordsRight;
-            renderTile(snake.back(), TailTexture, {1.,0,0, 1.});
+            renderTile(snake.back(), TailTexture, {1.,0,0, 1.}, 0);
             break;
     }
-    renderTile(Apple, AppleTexture, {.3,0,0,1});
+    renderTile(Apple, AppleTexture, {.3,0,0,1}, 0);
 #ifdef SNAKE_ANIMATION
     auto move = ((((float) clock() / (float) CLOCKS_PER_SEC) - lastTickTime) / map->getTickSpeed()); //NORMALIZED
     glColor4d(1., 0, 0, 1.);
@@ -342,11 +345,19 @@ void Snake::loop() {
             break;
     }
 #endif
-    Font::RenderText(std::to_string(Score), {2.,2.}, .05);
+    Font::RenderText(std::to_string(Score), {2.,2.}, .1, .005f * (float) map->getField().y);
+    if (Pause)
+    {
+        loopPause();
+    }
     // Swap the screen buffers
     glfwSwapBuffers(getwindow());
+    Server();
+}
+
+void Snake::Server() {
     //SERVER
-    if (lastTickTime + map->getTickSpeed() <= ((float) clock() / CLOCKS_PER_SEC)) {
+    if (!Pause && lastTickTime + map->getTickSpeed() <= ((float) clock() / CLOCKS_PER_SEC)) {
         lastTickTime = ((float) clock() / CLOCKS_PER_SEC);
         switch(direction)
         {
@@ -370,12 +381,36 @@ void Snake::loop() {
     }
 }
 
+void Snake::loopPause() {
+    glColor4d(0,0,0, .3);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBegin(GL_QUADS);
+    glVertex3d(map->getField().x + 1,1, 1);
+    glVertex3d(map->getField().x + 1,map->getField().y + 1, 1);
+    glVertex3d(1,map->getField().y + 1, 1);
+    glVertex3d(1,1, 1);
+    glEnd();
+    std::string list[] {"Quit", "OpenMap", "Restart", "Resume"};
+    int max = std::size(list);
+    for (int i = 0; i < max; ++i) {
+        glColor4d(1.,1.,0, 1.);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBegin(GL_QUADS);
+        glVertex3d(((double) map->getField().x / 4 * 3) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1.5), 1.1);
+        glVertex3d(((double) map->getField().x / 4 * 3) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1), 1.1);
+        glVertex3d(((double) map->getField().x / 4) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1), 1.1);
+        glVertex3d(((double) map->getField().x / 4) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1.5), 1.1);
+        glEnd();
+        Font::RenderText(list[i], {((double) map->getField().x / 4) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1.25)}, 1.2 , .001f * (float) map->getField().y, {0,0,0,1});
+    }
+}
+
 void Snake::key_callback(int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS)
     {
         switch (key) {
             case GLFW_KEY_ESCAPE:
-                loadMainMenu();
+                Pause = !Pause;
                 break;
             case GLFW_KEY_W:
                 direction = Directions::Up;
@@ -389,27 +424,11 @@ void Snake::key_callback(int key, int scancode, int action, int mods) {
             case GLFW_KEY_D:
                 direction = Directions::Right;
                 break;
-            case GLFW_KEY_O: {
-                auto path =SystemAdapter::OpenFileDialog({{"Snake map", "smap"}},
-                                                         SystemAdapter::GetGameFolderName("Snake"));
-                if (path.empty())
-                {
-                    return;
-                }
-                glfwSetWindowTitle(getwindow(), ("Snake. Opened map: ..." + path.substr(path.find_last_of('\\'),path.size() - path.find_last_of('\\'))).c_str());
-                auto m = SnakeMap::load(path);
-                if (m == nullptr)
-                {
-                    boxer::show("Failed to open map", "Failed to open map", boxer::Style::Error);
-                } else {
-                    map = m;
-                }
-                Reset();
-                size_callback(getWidth(), getHeight());
+            case GLFW_KEY_F11:
+                SwitchFullscreen();
                 break;
-            }
             case GLFW_KEY_I:
-                Info("This is my first game in c++; opengl. There are bugs in this game. If you find them, please write, admin@maserplay.ru .  By clicking on the \"O\", you can open the map file (.smap). Specification .smap: [field size defined by 1 number] [initial size of the snake] [a set of numbers from 0 to 1 that define each tile on the map.]")
+                Info(_c("This is my first game in c++; opengl. There are bugs in this game. If you find them, please write, admin@maserplay.ru ."))
                 break;
         }
     }
@@ -427,4 +446,38 @@ Snake::~Snake() {
     delete TailTexture;
     delete map;
     delete Eat;
+}
+
+void Snake::mouse_button_callback(int button, int action, int mods) {
+    if (Pause && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double xpos, ypos;
+        glfwGetCursorPos(getwindow(), &xpos, &ypos);
+        auto mouse_pos = TileEngine::vector_to_screencoords(xpos, ypos, map->getField());
+        std::function<void()> list[] = {[=](){loadMainMenu();}, [=](){
+            auto path  =SystemAdapter::OpenFileDialog({{_c("Snake map"), "smap"}},
+                                                     SystemAdapter::GetGameFolderName("Snake"));
+            if (path.empty())
+            {
+                return;
+            }
+            glfwSetWindowTitle(getwindow(), ( _("Snake. Opened map: ...") + path.substr(path.find_last_of('\\'),path.size() - path.find_last_of('\\'))).c_str());
+            auto m = SnakeMap::load(path);
+            if (m == nullptr)
+            {
+                boxer::show(_c("Failed to open map"), _c("Failed to open map"), boxer::Style::Error);
+            } else {
+                map = m;
+            }
+            Reset();
+            size_callback(getWidth(), getHeight());
+            }, [=](){Reset();Pause = false;}, [=](){Pause = false;}};
+        int max = std::size(list);
+        for (int i = 0; i < max; ++i) {
+            if (mouse_pos.x < ((double) map->getField().x / 4 * 3) + 1 && mouse_pos.x > ((double) map->getField().x / 4) + 1 && mouse_pos.y < ((double) map->getField().y / (max * 2) + 1) * (i + 1.5) && mouse_pos.y > ((double) map->getField().y / (max * 2) + 1) * (i + 1)) //X && Y
+            {
+                list[i]();
+                break;
+            }
+        }
+    }
 }

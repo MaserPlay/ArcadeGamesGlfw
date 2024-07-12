@@ -16,34 +16,33 @@
 
 void Pacman::init() {
     glfwSetWindowTitle(getwindow(), "Pacman");
+    //setIcon();
 
-    map = PacmanMap::load(SystemAdapter::GetGameFolderName("Pacman") + "\\Default.pmap");
+    map = PacmanMap::load(SystemAdapter::GetGameFolderName("Pacman") + "Default.pmap");
     if (map == nullptr)
     {
+        if (boxer::show("Failed to open default map. Regenerate it?", "Failed to open map", boxer::Style::Error, boxer::Buttons::YesNo) == boxer::Selection::No)
+        {
+            loadMainMenu();
+            return;
+        }
         map = new PacmanMap();
-        PacmanMap::save(SystemAdapter::GetGameFolderName("Pacman") + "\\Default.pmap", map);
+        PacmanMap::save(SystemAdapter::GetGameFolderName("Pacman") + "Default.pmap", map);
     }
 
     Reset();
-    if (map->getField().x <= 0 || map->getField().y <= 0)
-    {
-        ErrorAbort("[Pacman] field.x <= 0 || field.y <= 0")
-    }
-
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.1);
-    glLoadIdentity();
+    initEngine();
     loadResources();
 }
 
 void Pacman::loadResources() {
-    spdlog::info("[PACMAN] Start loading resources...");
-    if (!std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("Pacman") + "Pacman_resources.zip")){
-        spdlog::warn("[SNAKE] archive with resources {} not found", SystemAdapter::GetGameFolderName("Pacman") + "Pacman_resources.zip");
+    SPDLOG_INFO("Start loading resources...");
+    auto zippath = SystemAdapter::GetGameFolderName("Pacman") + "Pacman_resources.zip";
+    if (!std::filesystem::is_regular_file(zippath)){
+        SPDLOG_WARN("archive with resources {} not found", zippath);
         return;
     }
-    auto archive = ZipArchive(SystemAdapter::GetGameFolderName("Pacman") + "Pacman_resources.zip");
+    auto archive = ZipArchive(zippath);
     char *content = NULL; zip_uint64_t size; unsigned char *image = NULL;
     int width, height, nrChannels;
 
@@ -87,7 +86,15 @@ void Pacman::loadResources() {
 }
 
 void Pacman::Reset() {
-
+    lastTickTime = 0;
+    pacmanPos = map->getStartPos();
+    MoventGrid.clear();
+    for (unsigned int i = 0; i < map->getMap().size(); ++i) {
+        if (map->getMap()[i] == PacmanMap::None)
+        {
+            MoventGrid.emplace_back((i % map->getField().x) + 1,(i/map->getField().x) + 1);
+        }
+    }
 }
 
 void Pacman::loop() {
@@ -95,58 +102,65 @@ void Pacman::loop() {
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0,0,0,1);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+
     for (unsigned int i = 0; i < map->getMap().size(); ++i) {
         switch (map->getMap()[i]) {
             case PacmanMap::None:
                 break;
             case PacmanMap::Wall: {
-                glColor4d(0,0,1., 1.);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1));
+                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1), new Texture(), {0,0,1.,1.});
                 break;
             }
             default:
-                spdlog::warn("[SNAKE] Cannot find tile type in render {}", (unsigned int) map->getMap()[i]);
+                SPDLOG_WARN("Cannot find tile type in render {}", (unsigned int) map->getMap()[i]);
                 break;
         }
     }
+    renderTile(pacmanPos, new Texture(), {1., 1., 0, 1.});
 
     glfwSwapBuffers(getwindow());
     if (lastTickTime + tickSpeed <= ((float) clock() / CLOCKS_PER_SEC)) {
         lastTickTime = ((float) clock() / CLOCKS_PER_SEC);
+        switch (direction) {
+            case Up:
+                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1)))
+                {
+                    pacmanPos.y++;
+                }
+                break;
+            case Left:
+                if (CheckCollision(Coords(pacmanPos.x + -1,pacmanPos.y + 0)))
+                {
+                    pacmanPos.x--;
+                }
+                break;
+            case Down:
+                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1)))
+                {
+                    pacmanPos.y--;
+                }
+                break;
+            case Right:
+                if (CheckCollision(Coords(pacmanPos.x + 1,pacmanPos.y + 0)))
+                {
+                    pacmanPos.x++;
+                }
+                break;
+            default:
+                SPDLOG_WARN("Unknown direction");
+                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1)))
+                {
+                    pacmanPos.y++;
+                }
+                break;
+        }
         //SERVER LOGIC
     }
 }
 
-void Pacman::renderTile(Coords coords, std::array<glm::vec2, 4> v) {
-    glBegin(GL_QUADS);
-    glTexCoord2d(v[0].x, v[0].y);
-    glVertex2d(coords.x + 1,coords.y);
-    glTexCoord2d(v[1].x, v[1].y);
-    glVertex2d(coords.x + 1,coords.y + 1);
-    glTexCoord2d(v[2].x, v[2].y);
-    glVertex2d(coords.x,coords.y + 1);
-    glTexCoord2d(v[3].x, v[3].y);
-    glVertex2d(coords.x,coords.y);
-    glEnd();
-}
-
 void Pacman::size_callback(int width, int height) {
-    glViewport(0,0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    auto screensize = glm::vec<2, unsigned int>(5,5);
-    double Shift = 0;
-    if ((float) width >= (float) height) {
-        Shift = (((double) (width) / (double) (height)) - (double) screensize.x / (double) screensize.y) - 1;
-        glOrtho( -Shift, (double) screensize.x * ((double) width / (double) height) - Shift, 0. + 1, (double) screensize.y + 1, 0., 1.);
-    }
-    else {
-        Shift = (((double) (height) / (double) (width)) - (double) screensize.y / (double) screensize.x) - 1;
-        glOrtho(0. + 1, (double) screensize.x + 1, -Shift, (double) screensize.y * ((double) height / (double) width) - Shift, 0., 1.);
-    }
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    TileEngine::size_callback(width, height, map->getField());
 }
 
 void Pacman::key_callback(int key, int scancode, int action, int mods) {
@@ -155,17 +169,20 @@ void Pacman::key_callback(int key, int scancode, int action, int mods) {
             case GLFW_KEY_ESCAPE:
                 loadMainMenu();
                 break;
+            case GLFW_KEY_F11:
+                SwitchFullscreen();
+                break;
             case GLFW_KEY_W:
-                direction = Directions::Up;
+                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1))) { direction = Directions::Up; }
                 break;
             case GLFW_KEY_A:
-                direction = Directions::Left;
+                if (CheckCollision(Coords(pacmanPos.x + -1,pacmanPos.y + 0))) { direction = Directions::Left; }
                 break;
             case GLFW_KEY_S:
-                direction = Directions::Down;
+                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1))) { direction = Directions::Down; }
                 break;
             case GLFW_KEY_D:
-                direction = Directions::Right;
+                if (CheckCollision(Coords(pacmanPos.x + 1,pacmanPos.y + 0))) { direction = Directions::Right; }
                 break;
             case GLFW_KEY_O: {
                 auto path =SystemAdapter::OpenFileDialog({{"Pacman map", "pmap"}},
@@ -175,14 +192,12 @@ void Pacman::key_callback(int key, int scancode, int action, int mods) {
                     return;
                 }
                 glfwSetWindowTitle(getwindow(), ("Pacman. Opened map: ..." + path.substr(path.find_last_of('\\'),path.size() - path.find_last_of('\\'))).c_str());
-                map = PacmanMap::load(path);
-                if (map->getField().x <= 0 || map->getField().y <= 0)
+                auto m = PacmanMap::load(path);
+                if (m == nullptr)
                 {
-                    ErrorAbort("[PACMAN] field.x <= 0 || field.y <= 0")
-                }
-                if (map->getField().y != map->getField().x)
-                {
-                    ErrorAbort("[PACMAN] field.y != field.x, which is unsupported")
+                    boxer::show("Failed to open map", "Failed to open map", boxer::Style::Error);
+                } else {
+                    map = m;
                 }
                 Reset();
                 size_callback(getWidth(), getHeight());
@@ -195,10 +210,24 @@ void Pacman::key_callback(int key, int scancode, int action, int mods) {
     }
 }
 
-bool Pacman::CheckCollision(Coords c, Coords s) {
-    return c == s;
-}
-
 Pacman::~Pacman() {
     delete map;
+}
+
+bool Pacman::CheckCollision(Coords c) {
+    for (auto& tile: MoventGrid) {
+        if (tile == c)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Pacman::cursor_position_callback(double xpos, double ypos) {
+
+}
+
+void Pacman::mouse_button_callback(int button, int action, int mods) {
+
 }

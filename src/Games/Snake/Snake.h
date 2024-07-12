@@ -26,7 +26,13 @@ public:
     void loop() override;
     void size_callback(int width, int height) override;
     void key_callback(int key, int scancode, int action, int mods) override;
+    void cursor_position_callback(double xpos, double ypos) override {};
+
+    void mouse_button_callback(int button, int action, int mods) override;
+
 private:
+    void loopPause();
+    void Server();
     void loadResources();
     void MoveSnake(SnakeBody to);
     void Reset();
@@ -36,6 +42,7 @@ private:
     Coords Apple;
     SnakeMap* map;
     // TEMP
+    bool Pause = false;
     float lastTickTime;
     int Score = 0;
     //AUDIO

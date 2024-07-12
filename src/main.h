@@ -12,6 +12,7 @@
 
 Font::Font* getFont();
 GLFWwindow* getwindow();
+void SwitchFullscreen();
 void setContext(Context* context);
 void loadMainMenu();
 GLuint getWidth();

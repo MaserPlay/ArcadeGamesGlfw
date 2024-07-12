@@ -74,7 +74,7 @@ namespace Font{
         FT_Done_Face(face);   // Завершение работы с шрифтом face
     }
 
-    void RenderText(const std::string& text, glm::vec2 pos, float size){
+    void RenderText(const std::string& text, glm::vec2 pos, double z, float size, glm::vec<4, double> color){
         if (getFont() == NULL)
         {
             return;
@@ -83,18 +83,18 @@ namespace Font{
         for (auto& c :text) {
             auto ch = getFont()->getChar(c);
             shift.x += (float) ch->getBearingX() * size;
-            shift.y = pos.y + (float) (ch->getHeight() - ch->getBearingY()) * size;
-            glColor4d(1.,1.,1.,1.);
+            shift.y = pos.y + (float) (ch->getHeight() - ch->getBearingY()) * -size;
+            glColor4d(color.r, color.g, color.b, color.a);
             glBindTexture(GL_TEXTURE_2D, ch->getTexture()->getInitImage());
             glBegin(GL_QUADS);
             glTexCoord2d(1.0, 1.0);
-            glVertex2f(shift.x + (float) ch->getWidth() * size,shift.y);
+            glVertex3f(shift.x + (float) ch->getWidth() * size,shift.y, z);
             glTexCoord2d(0.0, 1.0);
-            glVertex2f(shift.x,shift.y);
+            glVertex3f(shift.x,shift.y, z);
             glTexCoord2d(0.0, 0.0);
-            glVertex2f(shift.x,shift.y + (float) ch->getHeight() * size);
+            glVertex3f(shift.x,shift.y + (float) ch->getHeight() * size, z);
             glTexCoord2d(1.0, 0.0);
-            glVertex2f(shift.x + (float) ch->getWidth() * size,shift.y + (float) ch->getHeight() * size);
+            glVertex3f(shift.x + (float) ch->getWidth() * size,shift.y + (float) ch->getHeight() * size, z);
             glEnd();
             shift.x += (float) (ch->getAdvance() - (ch->getBearingX() + ch->getWidth())) / 64 * size;
         }
@@ -102,7 +102,7 @@ namespace Font{
 
 
     Char::Char(FT_GlyphSlot &glyph) : width(glyph->bitmap.width), height(glyph->bitmap.rows), bearingX(glyph->bitmap_left), bearingY(glyph->bitmap_top), advance(glyph->advance.x),
-    texture(new Texture(glyph->bitmap.buffer, glyph->bitmap.width, glyph->bitmap.rows, Texture::Modes::ALPHA_WHITE)){
+    texture(new Texture(glyph->bitmap.buffer, glyph->bitmap.width, glyph->bitmap.rows, Texture::Colors::ALPHA_WHITE, Texture::Wrapping::CLAMP_TO_EDGE, Texture::Filtering::NONE, Texture::Filtering::NONE)){
         texture->Load();
     }
 }

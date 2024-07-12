@@ -21,6 +21,10 @@ public:
     void loop() override;
     void size_callback(int width, int height) override {}
     void key_callback(int key, int scancode, int action, int mods) override {}
+    void cursor_position_callback(double xpos, double ypos) override {}
+
+    void mouse_button_callback(int button, int action, int mods) override {}
+
 private:
     void GetUpdateInfo (const cpr::Response& r);
 #ifdef _DEBUG

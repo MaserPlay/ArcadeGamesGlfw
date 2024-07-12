@@ -18,6 +18,8 @@ public:
 
     virtual void size_callback(int width, int height) = 0;
     virtual void key_callback(int key, int scancode, int action, int mods) = 0;
+    virtual void mouse_button_callback(int button, int action, int mods) = 0;
+    virtual void cursor_position_callback(double xpos, double ypos) = 0;
 
     virtual ~Context() = default;
 };

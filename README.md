@@ -32,6 +32,7 @@ vcpkg install spdlog
 In future I want to
 - [ ] reduce the number of linked libraries ,
 - [ ] create a multi-window ,
+- [ ] Add multi-thread
 
  and release following games:
 - [X] Snake (reference - https://g.co/kgs/cS4VW9D) ,

@@ -15,7 +15,7 @@
 
 //Games
 #include "Snake.h"
-//#include "Pacman.h"
+#include "Pacman.h"
 
 //System
 #include "typeinfo"
@@ -23,13 +23,17 @@
 
 //JSON
 #include "nlohmann/json.hpp"
+#include "Localization.h"
+#include "ZipArchive.h"
 
 void ImguiContext::init() {
     SetIcon("standard_icon.png");
 #define AddGame(classname) GameList.push_back(new classname());
     AddGame(Snake)
-   // AddGame(Pacman)
-    auto e = cpr::GetCallback([this](const cpr::Response& r){ImguiContext::GetUpdateInfo(r);}, cpr::Url{"https://maserplay.ru/arcadegamesglfw_version.json"});
+#ifdef _DEBUG
+    AddGame(Pacman)
+#endif
+    cpr::GetCallback([this](const cpr::Response& r){ImguiContext::GetUpdateInfo(r);}, cpr::Url{"https://maserplay.ru/arcadegamesglfw_version.json"});
 
     //IMGUI INIT
     // Setup Dear ImGui context
@@ -37,6 +41,20 @@ void ImguiContext::init() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = NULL;
+    SPDLOG_DEBUG("loading Assets.zip && font.ttf");
+    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
+        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+        char *content = NULL; zip_uint64_t size = 0;
+        zip.get("font.ttf", content, size);
+        if (content != NULL) {
+            io.Fonts->AddFontFromMemoryTTF(content, size, 15, NULL, io.Fonts->GetGlyphRangesCyrillic());
+            SPDLOG_INFO("font.ttf loaded && applied");
+        } else {
+            SPDLOG_WARN("font.ttf not found");
+        }
+    } else {
+        SPDLOG_WARN("Assets.zip not found");
+    }
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
@@ -157,21 +175,21 @@ void ImguiContext::loop() {
         ImGui::EndMenu();
     }
 #endif
-    if (ImGui::BeginMenu("Help"))
+    if (ImGui::BeginMenu(_c("Help")))
     {
         if (ImGui::MenuItem(("About " + std::string(APPNAME)).c_str())) {
             Info((std::string(APPNAME) + " v." + std::to_string(APPVERSION) + " by " + std::string(APPAUTHOR)).c_str())
         }
-        if (ImGui::MenuItem("About ImGui")) {
+        if (ImGui::MenuItem(_c("About ImGui"))) {
             ImguiAbout = true;
         }
-        if (ImGui::MenuItem("User guide")) {
+        if (ImGui::MenuItem(_c("User guide"))) {
             ImguiUGuide = true;
         }
-        if (ImGui::MenuItem("There is error!")) {
+        if (ImGui::MenuItem(_c("There is error!"))) {
             SendError = true;
         }
-        if (ImGui::MenuItem("Quit")) {
+        if (ImGui::MenuItem(_c("Quit"))) {
             glfwSetWindowShouldClose(getwindow(), GLFW_TRUE);
         }
         ImGui::EndMenu();
@@ -181,7 +199,7 @@ void ImguiContext::loop() {
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4) ImColor::HSV(0, 0.6f, 0.6f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4) ImColor::HSV(0, 0.7f, 0.7f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4) ImColor::HSV(0, 0.8f, 0.8f));
-        if (ImGui::Button("Update Available!"))
+        if (ImGui::Button(_c("Update Available!")))
         {
             SystemAdapter::OpenLink(UpdateUrl);
         }
@@ -203,14 +221,14 @@ void ImguiContext::loop() {
         ImGui::ShowAboutWindow(&ImguiAbout);
     }
     if (ImguiUGuide) {
-        ImGui::Begin("UserGuide", &ImguiUGuide);
+        ImGui::Begin(_c("UserGuide"), &ImguiUGuide);
             ImGui::ShowUserGuide();
         ImGui::End();
     }
     if (SendError) {
         ImGui::SetNextWindowSize(ImVec2(700,220));
-        ImGui::Begin("Send error", &SendError);
-            ImGui::LabelText(" ", "Input Text In Space bellow, and print your email");
+        ImGui::Begin(_c("Send error"), &SendError);
+            ImGui::LabelText(" ", _c("Input Text In Space bellow, and print your email"));
             ImGui::InputText(" ", &ErrorText);
             if (ImGui::Button("Send")) {
                 nlohmann::json error;
@@ -221,7 +239,7 @@ void ImguiContext::loop() {
                           cpr::Body{to_string(error)},
                           cpr::Header{{"Content-Type", "application/json"}});
                 SendError = false;
-                Info("Thanks for error report!")
+                Info(_c("Thanks for error report!"))
             }
         ImGui::End();
     }
