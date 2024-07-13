@@ -70,6 +70,7 @@ namespace Font {
     void InitLib();
     void Destroy();
     void RenderText(const std::string& text, glm::vec2 pos, double z = 0 , float size = 1, glm::vec<4, double> color = {1., 1., 1., 1.});
+    long TextWidth(const std::string& text);
     class Font final {
     public:
         virtual ~Font();
@@ -81,14 +82,8 @@ namespace Font {
         explicit Font(const std::string& filename);
 
         [[nodiscard]] const Char* getChar(char ch) const{
-            return m.at(ch);
+            try { return m.at(ch); } catch (...) {return NULL;}
         }
-//        void Load()
-//        {
-//            for (auto& c:m) {
-//                c.second->Load();
-//            }
-//        }
 
     private:
         void Init();

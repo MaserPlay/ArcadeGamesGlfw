@@ -25,6 +25,9 @@
 #include "nlohmann/json.hpp"
 #include "Localization.h"
 #include "ZipArchive.h"
+#ifdef _DEBUG
+#include "IntroContext.h"
+#endif
 
 void ImguiContext::init() {
     SetIcon("standard_icon.png");
@@ -32,6 +35,7 @@ void ImguiContext::init() {
     AddGame(Snake)
 #ifdef _DEBUG
     AddGame(Pacman)
+    AddGame(IntroContext)
 #endif
     cpr::GetCallback([this](const cpr::Response& r){ImguiContext::GetUpdateInfo(r);}, cpr::Url{"https://maserplay.ru/arcadegamesglfw_version.json"});
 
@@ -92,7 +96,7 @@ void ImguiContext::loop() {
 
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-    ImGui::Begin("q", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar);
+    ImGui::Begin("q", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoBackground);
     ImGui::BeginMenuBar();
 #ifdef _DEBUG
     if (ImGui::BeginMenu("Debugging"))
@@ -178,7 +182,7 @@ void ImguiContext::loop() {
     if (ImGui::BeginMenu(_c("Help")))
     {
         if (ImGui::MenuItem(("About " + std::string(APPNAME)).c_str())) {
-            Info((std::string(APPNAME) + " v." + std::to_string(APPVERSION) + " by " + std::string(APPAUTHOR)).c_str())
+            Info((std::string(APPNAME) + " v." + std::string(APPVERSION) + " by " + std::string(APPAUTHOR)).c_str())
         }
         if (ImGui::MenuItem(_c("About ImGui"))) {
             ImguiAbout = true;
@@ -233,7 +237,7 @@ void ImguiContext::loop() {
             if (ImGui::Button("Send")) {
                 nlohmann::json error;
                 error["AppName"] = APPNAME;
-                error["AppVersion"] = std::to_string(APPVERSION);
+                error["AppVersion"] = APPVERSION;
                 error["Message"] = ErrorText;
                 cpr::PostAsync(cpr::Url{"https://maserplay.ru/api/crash"},
                           cpr::Body{to_string(error)},
@@ -246,7 +250,7 @@ void ImguiContext::loop() {
 
 
     for (auto g:GameList) {
-        if (ImGui::Button(typeid(*g).name(), ImVec2(250, 250)))
+        if (ImGui::Button(_c(typeid(*g).name()), ImVec2(250, 250)))
         {
             setContext(g);
         }

@@ -80,24 +80,35 @@ namespace Font{
             return;
         }
         glm::vec2 shift = pos;
-        for (auto& c :text) {
+        for (auto &c: text) {
             auto ch = getFont()->getChar(c);
-            shift.x += (float) ch->getBearingX() * size;
-            shift.y = pos.y + (float) (ch->getHeight() - ch->getBearingY()) * -size;
-            glColor4d(color.r, color.g, color.b, color.a);
-            glBindTexture(GL_TEXTURE_2D, ch->getTexture()->getInitImage());
-            glBegin(GL_QUADS);
-            glTexCoord2d(1.0, 1.0);
-            glVertex3f(shift.x + (float) ch->getWidth() * size,shift.y, z);
-            glTexCoord2d(0.0, 1.0);
-            glVertex3f(shift.x,shift.y, z);
-            glTexCoord2d(0.0, 0.0);
-            glVertex3f(shift.x,shift.y + (float) ch->getHeight() * size, z);
-            glTexCoord2d(1.0, 0.0);
-            glVertex3f(shift.x + (float) ch->getWidth() * size,shift.y + (float) ch->getHeight() * size, z);
-            glEnd();
-            shift.x += (float) (ch->getAdvance() - (ch->getBearingX() + ch->getWidth())) / 64 * size;
+            if (ch == NULL)
+            {
+            } else {
+                shift.x += (float) ch->getBearingX() * size;
+                shift.y = pos.y + (float) (ch->getHeight() - ch->getBearingY()) * -size;
+                glColor4d(color.r, color.g, color.b, color.a);
+                glBindTexture(GL_TEXTURE_2D, ch->getTexture()->getInitImage());
+                glBegin(GL_QUADS);
+                glTexCoord2d(1.0, 1.0);
+                glVertex3f(shift.x + (float) ch->getWidth() * size, shift.y, z);
+                glTexCoord2d(0.0, 1.0);
+                glVertex3f(shift.x, shift.y, z);
+                glTexCoord2d(0.0, 0.0);
+                glVertex3f(shift.x, shift.y + (float) ch->getHeight() * size, z);
+                glTexCoord2d(1.0, 0.0);
+                glVertex3f(shift.x + (float) ch->getWidth() * size, shift.y + (float) ch->getHeight() * size, z);
+                glEnd();
+                shift.x += (float) (ch->getAdvance() - (ch->getBearingX() + ch->getWidth())) / 64 * size;
+            }
         }
+    }
+    long TextWidth(const std::string& text){
+        auto width = 0;
+        for (auto& c : text) {
+            width += getFont()->getChar(c)->getAdvance() / 64;
+        }
+        return width;
     }
 
 

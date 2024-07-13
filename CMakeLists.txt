@@ -6,8 +6,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 
-add_compile_definitions(APPVERSION=1.2)
-add_compile_definitions(APPVERSIONCODE=3)
+add_compile_definitions(APPVERSION="1.2.5")
+add_compile_definitions(APPVERSIONCODE=4)
 add_compile_definitions(APPNAME="${PROJECT_NAME}")
 add_compile_definitions(APPAUTHOR="MaserPlay")
 

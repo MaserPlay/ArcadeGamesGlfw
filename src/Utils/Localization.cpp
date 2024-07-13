@@ -17,6 +17,7 @@ bool write = false;
 namespace Localization{
     void init(){
         lang = std::setlocale(0, "");
+        std::setlocale(LC_NUMERIC, "C");
         std::ifstream f(SystemAdapter::GetGameFolderName("Localization")  + "lang.lang");
         if (f.is_open()) {
             try{

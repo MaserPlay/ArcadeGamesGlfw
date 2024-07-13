@@ -350,7 +350,6 @@ void Snake::loop() {
     {
         loopPause();
     }
-    // Swap the screen buffers
     glfwSwapBuffers(getwindow());
     Server();
 }
@@ -401,7 +400,8 @@ void Snake::loopPause() {
         glVertex3d(((double) map->getField().x / 4) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1), 1.1);
         glVertex3d(((double) map->getField().x / 4) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1.5), 1.1);
         glEnd();
-        Font::RenderText(list[i], {((double) map->getField().x / 4) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1.25)}, 1.2 , .001f * (float) map->getField().y, {0,0,0,1});
+        auto size = .001f * (float) map->getField().y;
+        Font::RenderText(list[i], {(((float) Font::TextWidth(list[i]) * -size / 2) + ((float) map->getField().x / 2)) + 1,((double) map->getField().y / (max * 2) + 1) * (i + 1.25)}, 1.2 , size, {0,0,0,1});
     }
 }
 

@@ -277,20 +277,8 @@ void IntroContext::loop() {
 
     if ((int) (((float) clock() / CLOCKS_PER_SEC) - StartTime)%2==1)
     {
-//        SPDLOG_TRACE(((float) clock() / CLOCKS_PER_SEC) - StartTime);
-        Font::RenderText("Present", {-5,-6.5}, 0, .045, {0, 0, 0, 1.});
-        /*glColor4d(1.,1.,1., 1.);
-        glBindTexture(GL_TEXTURE_2D, PresentsTexture->getInitImage());
-        glBegin(GL_QUADS);
-        glTexCoord2d(LogoTexture->texturecords[0].x, LogoTexture->texturecords[0].y);
-        glVertex2d(5,(((float) PresentsTexture->getHeight() / (float) PresentsTexture->getWidth()) * -5) - 6);
-        glTexCoord2d(LogoTexture->texturecords[1].x, LogoTexture->texturecords[1].y);
-        glVertex2d(5,(((float) PresentsTexture->getHeight() / (float) PresentsTexture->getWidth()) * 5) - 6);
-        glTexCoord2d(LogoTexture->texturecords[2].x, LogoTexture->texturecords[2].y);
-        glVertex2d(-5,(((float) PresentsTexture->getHeight() / (float) PresentsTexture->getWidth()) * 5) - 6);
-        glTexCoord2d(LogoTexture->texturecords[3].x, LogoTexture->texturecords[3].y);
-        glVertex2d(-5,(((float) PresentsTexture->getHeight() / (float) PresentsTexture->getWidth()) * -5) - 6);
-        glEnd();*/
+        auto size = .045f;
+        Font::RenderText("Present", {(float) Font::TextWidth("Present") * -size / 2,-7}, 0, size, {0, 0, 0, 1.});
     }
 
     if (StartTime + IntroDuration <= ((float) clock() / CLOCKS_PER_SEC))

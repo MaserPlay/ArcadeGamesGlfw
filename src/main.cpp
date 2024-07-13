@@ -152,7 +152,7 @@ int main(int argc, char** argv)
         if (std::string(argv[i]) == "skipintro")
         {
             skipintro = true;
-        } else if (std::string(argv[i]) == "genlang") {
+        } else if (std::string(argv[i]) == "genlangfile") {
             genlangfile = true;
         }
     }
@@ -204,7 +204,6 @@ int main(int argc, char** argv)
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-
     InitAsync();
 #if defined(_DEBUG) && !defined(DO_WINMAIN)
     if (skipintro) {

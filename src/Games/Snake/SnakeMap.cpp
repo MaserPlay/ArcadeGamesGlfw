@@ -74,7 +74,7 @@ SnakeMap* SnakeMap::load(const std::string& name) {
     }
     if (m->getTickSpeed() <= 0)
     {
-        SPDLOG_ERROR("TickSpeed < 2"); return nullptr;
+        SPDLOG_ERROR("TickSpeed <= 0"); return nullptr;
     }
     return m;
 }

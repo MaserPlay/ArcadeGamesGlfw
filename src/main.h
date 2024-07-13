@@ -12,6 +12,9 @@
 
 Font::Font* getFont();
 GLFWwindow* getwindow();
+#ifdef _DEBUG
+bool getFps();
+#endif
 void SwitchFullscreen();
 void setContext(Context* context);
 void loadMainMenu();
