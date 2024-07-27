@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 16.06.2024.
 //
 
@@ -39,11 +39,16 @@ public:
             SPDLOG_WARN("texture == NULL");
         }
     }
+    Texture(const Texture &p) = delete;   // удаляем конструктор
     std::array<glm::vec2, 4> texturecords {glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)};
 
     virtual ~Texture();
 
     void Load();
+
+    bool getIsNull() const{
+        return initImage == 0;
+    }
 
     [[nodiscard]] int getWidth() const {
         return width;

@@ -5,9 +5,9 @@
 #ifndef ARCADEGAMESGLFW_PACMAN_H
 #define ARCADEGAMESGLFW_PACMAN_H
 
-#include "BaseGame.h"
+#include "Utils/BaseGame.h"
 #include "Other.h"
-#include "Texture.h"
+#include "Utils/Render/Texture.h"
 #include "TileEngine.h"
 // OPENAL
 #include <al.h>

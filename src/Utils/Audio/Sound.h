@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 04.07.2024.
 //
 
@@ -7,11 +7,12 @@
 
 
 #include <al.h>
-#include "SoundFile.hpp"
+#include "Utils/System/SoundFile.hpp"
 
 class Sound {
 public:
     Sound() = default;
+    Sound(const Sound &p) = delete;   // удаляем конструктор
     explicit Sound(const SoundFile* file);
 
     explicit Sound(const std::string& filename);

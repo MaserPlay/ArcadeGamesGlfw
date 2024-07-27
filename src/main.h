@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 16.06.2024.
 //
 
@@ -6,9 +6,9 @@
 #define ARCADEGAMESGLFW_MAIN_H
 
 #include "Context.h"
-#include "BaseGame.h"
+#include "Utils/BaseGame.h"
 #include "string"
-#include "Font.h"
+#include "Utils/Render/Font.h"
 
 Font::Font* getFont();
 GLFWwindow* getwindow();
@@ -21,6 +21,6 @@ void loadMainMenu();
 GLuint getWidth();
 GLuint getHeight();
 void SetIcon(const std::string& name);
-void InitAsync();
+void Init();
 
 #endif //ARCADEGAMESGLFW_MAIN_H

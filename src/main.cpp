@@ -1,4 +1,4 @@
-// GLEW
+﻿// GLEW
 #include <GL/glew.h>
 
 // GLFW
@@ -13,22 +13,22 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #else
 #include "spdlog/sinks/basic_file_sink.h"
-#include <stb_image.h>
 #endif
+//STB
+#include <stb_image.h>
 //CONTEXT
 #include "ImguiContext.h"
 //MEMORY
 #include "memory"
 //OTHER
-#include "SystemAdapter.h"
+#include "Utils/System/SystemAdapter.h"
 //ARCHIVE
-#include "ZipArchive.h"
+#include "Utils/System/ZipArchive.h"
 //OTHER
-#include <stb_image.h>
 #include "debug.h"
 #include "main.h"
 #include "IntroContext.h"
-#include "Localization.h"
+#include "Utils/System/Localization.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -76,8 +76,8 @@ void setContext(Context* context)
 void SetIcon(const std::string& name)
 {
     SPDLOG_DEBUG("loading Assets.zip && " + name);
-    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
-        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("Assets") + "Assets_resources.zip")) {
+        ZipArchive zip{SystemAdapter::GetGameFolderName("Assets") + "Assets_resources.zip"};
         char *content = NULL; zip_uint64_t size = 0;
         zip.get(name, content, size);
         if (content != NULL) {
@@ -99,12 +99,12 @@ void loadMainMenu()
 {
     setContext(new ImguiContext());
 }
-void InitAsync()
+void Init()
 {
-    //DEFALT FONT
     SPDLOG_DEBUG("loading Assets.zip && font.ttf");
-    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
-        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+    auto zzz = SystemAdapter::GetGameFolderName("Assets") + "Assets_resources.zip";
+    if (std::filesystem::is_regular_file(zzz)) {
+        ZipArchive zip{zzz};
         char *content = NULL; zip_uint64_t size = 0;
         zip.get("font.ttf", content, size);
         if (content != NULL) {
@@ -117,14 +117,7 @@ void InitAsync()
         SPDLOG_WARN("Assets.zip not found");
     }
 }
-
-// The MAIN function, from here we start the application and run the game loop
-#ifdef DO_WINMAIN
-int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
-#else
-int main(int argc, char** argv)
-#endif
-{
+void Domain(){
     //Create Log
 #ifdef _DEBUG
 // NO abort() message in windows
@@ -146,17 +139,8 @@ int main(int argc, char** argv)
     spdlog::set_default_logger(logger);
 #endif
     spdlog::set_pattern("%s:%# [%^%l%$] %v");
-    SPDLOG_DEBUG("Starting...");
-#ifndef DO_WINMAIN
-    for (int i = 0; i < argc; ++i) {
-        if (std::string(argv[i]) == "skipintro")
-        {
-            skipintro = true;
-        } else if (std::string(argv[i]) == "genlangfile") {
-            genlangfile = true;
-        }
-    }
-#endif
+    SPDLOG_INFO("Starting...");
+    SPDLOG_INFO("{} by {} v.{}", APPNAME, APPAUTHOR, APPVERSION);
     // Init GLFW
     glfwInit();
     //Init
@@ -179,8 +163,7 @@ int main(int argc, char** argv)
     if (window == nullptr)
     {
         glfwTerminate();
-        ErrorAbort("Failed to create GLFW window")
-        return -1;
+        ErrorAbort("Failed to create GLFW window");
     }
 
     glfwMakeContextCurrent(window);
@@ -192,8 +175,7 @@ int main(int argc, char** argv)
     // Initialize GLEW to setup the OpenGL Function pointers
     if (glewInit() != GLEW_OK)
     {
-        ErrorAbort("Failed to initialize GLEW")
-        return -1;
+        ErrorAbort("Failed to initialize GLEW");
     }
 
     // Define the viewport dimensions
@@ -204,10 +186,10 @@ int main(int argc, char** argv)
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-    InitAsync();
+    Init();
 #if defined(_DEBUG) && !defined(DO_WINMAIN)
     if (skipintro) {
-//        std::thread t{InitAsync};
+//        std::thread t{Init};
 //        if (t.joinable()) {
 //            t.join();
 //        }
@@ -229,6 +211,8 @@ int main(int argc, char** argv)
     {
         ErrorThrow("currentContext == NULL")
     }
+    TileEngine::initEngine();
+    // gldefault
 
     // Game loop
     while (!glfwWindowShouldClose(window))
@@ -261,7 +245,33 @@ int main(int argc, char** argv)
     alcMakeContextCurrent(nullptr);
     alcDestroyContext(AlContext);
     alcCloseDevice(Aldevice);
-
+}
+// The MAIN function, from here we start the application and run the game loop
+#ifdef DO_WINMAIN
+int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+#else
+int main(int argc, char** argv)
+#endif
+{
+#ifndef DO_WINMAIN
+    for (int i = 0; i < argc; ++i) {
+        if (std::string(argv[i]) == "skipintro")
+        {
+            skipintro = true;
+        } else if (std::string(argv[i]) == "genlangfile") {
+            genlangfile = true;
+        }
+    }
+#endif
+    try {
+        Domain();
+    } catch (std::exception& e)
+    {
+        SPDLOG_CRITICAL("GLOBAL CRITICAL ERROR!!!! {}", e.what());
+    } catch (...)
+    {
+        SPDLOG_CRITICAL("GLOBAL CRITICAL ERROR!!!!");
+    }
     return 0;
 }
 void window_size_callback(GLFWwindow* window, int width, int height){

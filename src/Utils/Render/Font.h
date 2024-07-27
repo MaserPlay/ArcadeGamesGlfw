@@ -1,20 +1,27 @@
-//
+﻿//
 // Created by super on 04.07.2024.
 //
 
 #ifndef ARCADEGAMES_FONT_H
 #define ARCADEGAMES_FONT_H
-#include <ft2build.h>
-#include FT_FREETYPE_H
-//#include FT_GLYPH_H
+#include "Other.h"
+#include <cstddef>
+#include <map>
 #include "Texture.h"
+#include "glm/mat4x4.hpp"
+
+//FREE TYPE
+#include <ft2build.h>
+#include "freetype/freetype.h"
+#include FT_GLYPH_H
+#include FT_FREETYPE_H
 
 //GLM
 #include "glm/vec4.hpp"
 
+//CLASS
+class MergedRender;
 
-#include <cstddef>
-#include <map>
 
 namespace Font {
     class Char final {
@@ -69,7 +76,7 @@ namespace Font {
     };
     void InitLib();
     void Destroy();
-    void RenderText(const std::string& text, glm::vec2 pos, double z = 0 , float size = 1, glm::vec<4, double> color = {1., 1., 1., 1.});
+    void RenderText(const std::string& text, glm::vec2 pos, glm::mat4 mat, std::vector<std::unique_ptr<MergedRender>>& v, float size = 1, Color color = {1., 1., 1., 1.});
     long TextWidth(const std::string& text);
     class Font final {
     public:

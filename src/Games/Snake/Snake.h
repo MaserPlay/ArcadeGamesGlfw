@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 17.06.2024.
 //
 
@@ -9,16 +9,20 @@
 #include <deque>
 #include "SnakeMap.h"
 #include "TileEngine.h"
+#include "Button.h"
 
-struct SnakeBody : public Coords{
-    SnakeBody(unsigned int xy, Directions direction) : Coords(xy), direction(direction) {}
 
-    SnakeBody(unsigned int x, unsigned int y, Directions direction) : Coords(x, y), direction(direction) {}
-
-    Directions direction;
-};
 
 class Snake : public TileEngine {
+private:
+    struct SnakeBody : public Coords{
+        SnakeBody(unsigned int xy, Directions direction) : Coords(xy), direction(direction) {}
+
+        SnakeBody(unsigned int x, unsigned int y, Directions direction) : Coords(x, y), direction(direction) {}
+
+        Directions direction {};
+        MergedRender* render = new MergedRender();
+    };
 public:
     ~Snake() override;
 
@@ -31,15 +35,18 @@ public:
     void mouse_button_callback(int button, int action, int mods) override;
 
 private:
+    void useCoordsAndTextureAndLoad(SnakeBody&, Texture*);
     void loopPause();
     void Server();
     void loadResources();
     void MoveSnake(SnakeBody to);
     void Reset();
     void ResetApple();
+    void SelectAndOpenMap();
+    bool OpenMap(std::string path);
     std::deque<SnakeBody> snake {};
     Directions direction = Down;
-    Coords Apple;
+    Coords AppleCoords;
     SnakeMap* map;
     // TEMP
     bool Pause = false;
@@ -50,7 +57,6 @@ private:
     // TEXTURES
     Texture* AngleTexture = new Texture();
     Texture* TailTexture = new Texture();
-    Texture* AppleTexture = new Texture();
     Texture* HeadTexture = new Texture();
     Texture* BodyTexture = new Texture();
     Texture* WallTexture = new Texture();
@@ -59,6 +65,13 @@ private:
     const std::array<glm::vec2, 4> texturecordsLeft = {glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0)};
     const std::array<glm::vec2, 4> texturecordsDown = {glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0)};
     const std::array<glm::vec2, 4> texturecordsRight = {glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0)};
+    // RENDER
+    MergedRender* Grid {new MergedRender()};
+    MergedRender* Apple {new MergedRender()};
+    std::vector<MergedRender*> WallsRender {};
+    std::vector<std::unique_ptr<MergedRender>> ScoreBuffer = {};
+    //UI
+    std::vector<Button> pauseButtons {};
 };
 
 

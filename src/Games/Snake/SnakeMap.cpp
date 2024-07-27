@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 22.06.2024.
 //
 
@@ -41,7 +41,7 @@ SnakeMap* SnakeMap::load(const std::string& name) {
             SPDLOG_ERROR("Failed to open map std::out_of_range");
             return nullptr;
         }
-        SPDLOG_INFO("{} loaded", name);
+        SPDLOG_INFO("{} loaded", name.substr(name.find_last_of('\\'),name.size() - name.find_last_of('\\')));
     } else {
         SPDLOG_WARN("Cannot open {}", name);
         return nullptr;

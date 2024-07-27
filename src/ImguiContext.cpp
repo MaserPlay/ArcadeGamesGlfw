@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 20.06.2024.
 //
 
@@ -15,21 +15,22 @@
 
 //Games
 #include "Snake.h"
-#include "Pacman.h"
 
 //System
 #include "typeinfo"
-#include "SystemAdapter.h"
+#include "Utils/System/SystemAdapter.h"
 
 //JSON
 #include "nlohmann/json.hpp"
-#include "Localization.h"
-#include "ZipArchive.h"
+#include "Utils/System/Localization.h"
+#include "Utils/System/ZipArchive.h"
 #ifdef _DEBUG
+#include "Pacman.h"
 #include "IntroContext.h"
 #endif
 
 void ImguiContext::init() {
+    SPDLOG_INFO("Start Init ImguiContext");
     SetIcon("standard_icon.png");
 #define AddGame(classname) GameList.push_back(new classname());
     AddGame(Snake)
@@ -46,8 +47,8 @@ void ImguiContext::init() {
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = NULL;
     SPDLOG_DEBUG("loading Assets.zip && font.ttf");
-    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("") + "Assets.zip")) {
-        ZipArchive zip{SystemAdapter::GetGameFolderName("") + "Assets.zip"};
+    if (std::filesystem::is_regular_file(SystemAdapter::GetGameFolderName("Assets") + "Assets_resources.zip")) {
+        ZipArchive zip{SystemAdapter::GetGameFolderName("Assets") + "Assets_resources.zip"};
         char *content = NULL; zip_uint64_t size = 0;
         zip.get("font.ttf", content, size);
         if (content != NULL) {

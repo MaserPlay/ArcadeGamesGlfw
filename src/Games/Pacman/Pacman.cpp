@@ -1,16 +1,16 @@
-//
+﻿//
 // Created by super on 22.06.2024.
 //
 
 #include "Pacman.h"
 #include <ctime>
 #include "debug.h"
-#include "SystemAdapter.h"
+#include "Utils/System/SystemAdapter.h"
 //STB
 #include "stb_image.h"
 //ARCHIVE
-#include "ZipArchive.h"
-#include "SoundFile.hpp"
+#include "Utils/System/ZipArchive.h"
+#include "Utils/System/SoundFile.hpp"
 //MAP
 #include "PacmanMap.h"
 
@@ -31,7 +31,7 @@ void Pacman::init() {
     }
 
     Reset();
-    initEngine();
+    TileEngine::initEngine();
     loadResources();
 }
 
@@ -109,7 +109,7 @@ void Pacman::loop() {
             case PacmanMap::None:
                 break;
             case PacmanMap::Wall: {
-                renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1), new Texture(), {0,0,1.,1.});
+//                TileEngine::renderTile(Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1), new Texture(), {0,0,1.,1.});
                 break;
             }
             default:
@@ -117,7 +117,7 @@ void Pacman::loop() {
                 break;
         }
     }
-    renderTile(pacmanPos, new Texture(), {1., 1., 0, 1.});
+//    TileEngine::renderTile(pacmanPos, new Texture(), {1., 1., 0, 1.});
 
     glfwSwapBuffers(getwindow());
     if (lastTickTime + tickSpeed <= ((float) clock() / CLOCKS_PER_SEC)) {

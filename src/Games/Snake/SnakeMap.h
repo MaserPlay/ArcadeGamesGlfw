@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 22.06.2024.
 //
 
@@ -18,7 +18,7 @@ public:
         None,
         Wall
     };
-    [[nodiscard]] const glm::vec<2, unsigned int> &getField() const{
+    [[nodiscard]] const Coords &getField() const{
         return field;
     }
 

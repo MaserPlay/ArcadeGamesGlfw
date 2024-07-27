@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 22.06.2024.
 //
 
@@ -10,6 +10,7 @@
 #include "string"
 #include "filesystem"
 #include "debug.h"
+#include <fstream>
 
 namespace SystemAdapter {
     void Init();
@@ -18,6 +19,7 @@ namespace SystemAdapter {
 
     std::string OpenFileDialog(const FileFilter& filter, const std::string& defaultpath = "");
     std::string GetGameFolderName(std::string name);
+    std::string ReadAll(std::ifstream &f);
     void OpenLink(std::string);
 
     void Destroy();

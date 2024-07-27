@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 12.07.2024.
 //
 
@@ -6,7 +6,7 @@
 #include <fstream>
 #include "nlohmann/json.hpp"
 #include "map"
-#include "SystemAdapter.h"
+#include "Utils/System/SystemAdapter.h"
 
 nlohmann::json local {};
 std::string lang = "en";
@@ -27,7 +27,7 @@ namespace Localization{
                 SPDLOG_WARN(e.what());
             }
         } else {
-            SPDLOG_WARN("cannot open SystemAdapter::GetGameFolderName(\"Localization\")  + \"lang.lang\"");
+            SPDLOG_WARN("cannot open SystemAdapter::GetGameFolderName(\"Localization\") + \"lang.lang\"");
         }
     }
     std::string getTrans(std::string en){

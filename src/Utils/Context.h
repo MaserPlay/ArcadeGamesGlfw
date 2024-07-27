@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 20.06.2024.
 //
 
@@ -13,6 +13,8 @@
 
 class Context {
 public:
+    Context() = default;
+    Context(const Context &p) = delete;   // удаляем конструктор
     virtual void init() = 0;
     virtual void loop() = 0;
 

@@ -1,0 +1,56 @@
+{
+    "About ImGui": {
+        "Russian _Russia.1251": "Про Imgui"
+    },
+    "Failed to open default map. Regenerate it?": {
+        "Russian_Russia.1251": "Не удалось открыть карту по умолчанию. Восстановите ее?"
+    },
+    "Failed to open map": {
+        "Russian_Russia.1251": "Невозможно открыть карту"
+    },
+    "Help": {
+        "Russian_Russia.1251": "Помощь"
+    },
+    "Input Text In Space bellow, and print your email": {
+        "Russian_Russia.1251": "Введите текст в поле ниже и распечатайте свое электронное письмо"
+    },
+    "OpenMap": {
+        "Russian_Russia.1251": "Открыть карту"
+    },
+    "Quit": {
+        "Russian_Russia.1251": "Выйти"
+    },
+    "Restart": {
+        "Russian_Russia.1251": "Рестарт"
+    },
+    "Resume": {
+        "Russian_Russia.1251": "Продолжить"
+    },
+    "Send error": {
+        "Russian_Russia.1251": "Отправить ошибку"
+    },
+    "Snake map": {
+        "Russian_Russia.1251": "карта змейки"
+    },
+    "Thanks for error report!": {
+        "Russian_Russia.1251": "Спасибо за отчет об ошибке"
+    },
+    "The snake crashed into an obstacle": {
+        "Russian_Russia.1251": "Змея врезалась об препятствие"
+    },
+    "The snake crashed into an obstacle. Do you want to reset field?": {
+        "Russian_Russia.1251": "Змея врезалась в препятствие. Вы хотите сбросить поле?"
+    },
+    "There is error!": {
+        "Russian_Russia.1251": "Тут Ошибка!"
+    },
+    "This is my first game in c++; opengl. There are bugs in this game. If you find them, please write, admin@maserplay.ru .": {
+        "Russian_Russia.1251": "Это моя первая игра на c++ и opengl. В этой игре есть ошибки. Если вы их обнаружите, пожалуйста, напишите, admin@maserplay.ru"
+    },
+    "User guide": {
+        "Russian_Russia.1251": "Пользовательский гайд"
+    },
+    "UserGuide": {
+        "Russian_Russia.1251": "Руководство пользователя"
+    }
+}

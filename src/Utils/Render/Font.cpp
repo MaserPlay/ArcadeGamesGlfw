@@ -1,15 +1,21 @@
-//
+﻿//
 // Created by super on 04.07.2024.
 //
 
 #include "LOG.h"
 #include <fstream>
+#include <memory>
+#include <locale>
+#include <codecvt>
 #include "Font.h"
 #include "main.h"
 //STB
 #define STBI_MSC_SECURE_CRT
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+//MERGERD RENDER
+#include "MergedRender.h"
 
 FT_Library ft = NULL;
 namespace Font{
@@ -59,6 +65,7 @@ namespace Font{
                 {
                     SPDLOG_WARN("ERROR::FREETYTPE: Failed to load Glyph {}", (char) character);
                 } else {
+//                    stbi_write_bmp((std::to_string(character) + ".bmp").c_str(), face->glyph->bitmap.width, face->glyph->bitmap.rows, 2, face->glyph->bitmap.buffer);
                     auto ch = new Char(face->glyph);
                     if (ch->getTexture()->getImage() != NULL) { m.insert({(char) character, ch}); }
                 }
@@ -73,40 +80,48 @@ namespace Font{
     Font::~Font() {
         FT_Done_Face(face);   // Завершение работы с шрифтом face
     }
-
-    void RenderText(const std::string& text, glm::vec2 pos, double z, float size, glm::vec<4, double> color){
+    void RenderText(const std::string& text, glm::vec2 pos, glm::mat4 mat, std::vector<std::unique_ptr<MergedRender>>& v, float size, Color color){
         if (getFont() == NULL)
         {
             return;
         }
         glm::vec2 shift = pos;
-        for (auto &c: text) {
-            auto ch = getFont()->getChar(c);
-            if (ch == NULL)
+        v.resize(text.size());
+        for (size_t i = 0; i < text.size(); ++i) {
+            auto ch = getFont()->getChar(text[i]);
+            if (ch != NULL)
             {
-            } else {
                 shift.x += (float) ch->getBearingX() * size;
                 shift.y = pos.y + (float) (ch->getHeight() - ch->getBearingY()) * -size;
-                glColor4d(color.r, color.g, color.b, color.a);
-                glBindTexture(GL_TEXTURE_2D, ch->getTexture()->getInitImage());
-                glBegin(GL_QUADS);
-                glTexCoord2d(1.0, 1.0);
-                glVertex3f(shift.x + (float) ch->getWidth() * size, shift.y, z);
-                glTexCoord2d(0.0, 1.0);
-                glVertex3f(shift.x, shift.y, z);
-                glTexCoord2d(0.0, 0.0);
-                glVertex3f(shift.x, shift.y + (float) ch->getHeight() * size, z);
-                glTexCoord2d(1.0, 0.0);
-                glVertex3f(shift.x + (float) ch->getWidth() * size, shift.y + (float) ch->getHeight() * size, z);
-                glEnd();
+                if (!v[i] || v[i]->getShaderProgram() <= 0)
+                {
+                    v[i] = std::make_unique<MergedRender>();
+                    v[i]->setFragmentShader(MergedRender::TextureFragmentShader);
+                    v[i]->quard = new MergedRender::Quard(shift, ch->getWidth() * size, (float) ch->getHeight() * size, ch->getTexture());
+                    v[i]->setSpeed(MergedRender::SpeedContent::DYNAMIC);
+                    v[i]->load();
+                } else {
+                    v[i]->quard->setVertices(shift, ch->getWidth() * size, (float) ch->getHeight() * size);
+                    v[i]->quard->color = color;
+                    v[i]->quard->texture = ch->getTexture();
+                    v[i]->VerticesChanged();
+                }
+                v[i]->use(mat);
                 shift.x += (float) (ch->getAdvance() - (ch->getBearingX() + ch->getWidth())) / 64 * size;
             }
         }
     }
     long TextWidth(const std::string& text){
+        if (getFont() == NULL)
+        {
+            return 0;
+        }
         auto width = 0;
         for (auto& c : text) {
-            width += getFont()->getChar(c)->getAdvance() / 64;
+            if (getFont()->getChar(c) != NULL)
+            {
+                width += getFont()->getChar(c)->getAdvance() / 64;
+            }
         }
         return width;
     }

@@ -1,10 +1,14 @@
-//
+﻿//
 // Created by super on 16.06.2024.
 //
 
 #include "Texture.h"
 
 void Texture::Load() {
+    if (this->initImage > 0)
+    {
+        return;
+    }
         // load and create a texture
         // -------------------------
         glGenTextures(1, &this->initImage);

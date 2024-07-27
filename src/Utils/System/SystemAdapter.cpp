@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by super on 22.06.2024.
 //
 
@@ -6,6 +6,7 @@
 #ifdef _WINDOWS
 #include <windows.h>
 #include <shellapi.h>
+
 #endif
 
 namespace SystemAdapter{
@@ -46,6 +47,24 @@ namespace SystemAdapter{
 #ifdef _WINDOWS
         ShellExecute(0, 0, link.c_str(), 0, 0 , SW_SHOW );
 #endif
+    }
+    std::string ReadAll(std::ifstream &stream){
+        constexpr auto read_size = std::size_t(4096);
+        stream.exceptions(std::ios_base::badbit);
+
+        if (!stream) {
+            SPDLOG_ERROR("file does not exist");
+            return "";
+            throw std::ios_base::failure("file does not exist");
+        }
+
+        auto out = std::string();
+        auto buf = std::string(read_size, '\0');
+        while (stream.read(& buf[0], read_size)) {
+            out.append(buf, 0, stream.gcount());
+        }
+        out.append(buf, 0, stream.gcount());
+        return out;
     }
 
     void Destroy(){
