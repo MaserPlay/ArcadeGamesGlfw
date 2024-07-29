@@ -32,7 +32,7 @@ namespace Font {
 
         void Load(){texture->Load();}
 
-        [[nodiscard]] Texture *getTexture() const {
+        [[nodiscard]] std::shared_ptr<Texture> getTexture() const {
             return texture;
         }
 
@@ -62,7 +62,7 @@ namespace Font {
         }
 
     private:
-        Texture* texture = new Texture();
+        std::shared_ptr<Texture> texture {new Texture()};
         ///ширина глифа в пикселях
         unsigned int width;
         ///высота глифа в пикселях
@@ -89,14 +89,14 @@ namespace Font {
         explicit Font(const std::string& filename);
 
         [[nodiscard]] const Char* getChar(char ch) const{
-            try { return m.at(ch); } catch (...) {return NULL;}
+            try { return m.at(ch).get(); } catch (...) {return NULL;}
         }
 
     private:
         void Init();
 
         FT_Face face = nullptr;
-        std::map<char, Char*> m {};
+        std::map<char, std::unique_ptr<Char>> m {};
     };
 }
 

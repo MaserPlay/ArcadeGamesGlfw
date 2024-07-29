@@ -13,18 +13,12 @@
 //Snake
 #include "Snake.h"
 
-typedef glm::vec<2,short> IntroCoords;
+typedef Coords<short> IntroCoords;
 
-struct SnakeBodyUpdated : public IntroCoords{
-    SnakeBodyUpdated(unsigned int xy, Directions direction) : IntroCoords(xy), direction(direction) {}
-
-    SnakeBodyUpdated(unsigned int x, unsigned int y, Directions direction) : IntroCoords(x, y), direction(direction) {}
-
-    Directions direction;
-    MergedRender* render = new MergedRender();
-};
 
 class IntroContext : public TileEngine {
+private:
+    using SnakeBodyUpdated = SnakeBody<short>;
 public:
     ~IntroContext() override;
 
@@ -40,25 +34,25 @@ public:
     void mouse_button_callback(int button, int action, int mods) override {}
 
 private:
-    void useCoordsAndTextureAndLoad(SnakeBodyUpdated&, Texture*);
+    void useCoordsAndTextureAndLoad(SnakeBodyUpdated&, const std::shared_ptr<Texture>&);
     void MoveSnake(SnakeBodyUpdated to, std::deque<SnakeBodyUpdated>& snake);
     void Server();
     void loadResources();
     void loadSnakeResources();
     void SkipIntro();
-    glm::vec<2, int> screensize {8,8};
+    Coords<int> screensize {8,8};
     //SNAKES
-    std::vector<std::deque<SnakeBodyUpdated>> Snakes {{}, {}, {}, {}};
+    std::vector<std::deque<SnakeBodyUpdated>> Snakes {};
     //TEMP
     float StartTime;
 
     //SNAKE
     float lastTickTime;
     //TEXTURES
-    Texture* AngleTexture = new Texture();
-    Texture* TailTexture = new Texture();
-    Texture* HeadTexture = new Texture();
-    Texture* BodyTexture = new Texture();
+    std::shared_ptr<Texture> AngleTexture {new Texture()};
+    std::shared_ptr<Texture> TailTexture {new Texture()};
+    std::shared_ptr<Texture> HeadTexture {new Texture()};
+    std::shared_ptr<Texture> BodyTexture {new Texture()};
     //TEXTURE COORDS
     const std::array<glm::vec2, 4> texturecordsUp = {glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)};
     const std::array<glm::vec2, 4> texturecordsLeft = {glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0)};
@@ -67,8 +61,8 @@ private:
     //UI
     std::vector<std::unique_ptr<MergedRender>> PresentsBuffer = {};
     // RENDER
-    MergedRender* Grid = new MergedRender();
-    MergedRender* LogoRender = new MergedRender();
+    std::unique_ptr<MergedRender> Grid {new MergedRender()};
+    std::unique_ptr<MergedRender> LogoRender {new MergedRender()};
 };
 
 

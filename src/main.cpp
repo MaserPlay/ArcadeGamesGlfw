@@ -262,15 +262,18 @@ int main(int argc, char** argv)
             genlangfile = true;
         }
     }
+    delete argv;
 #endif
     try {
         Domain();
-    } catch (std::exception& e)
+    } catch (const std::exception& e)
     {
         SPDLOG_CRITICAL("GLOBAL CRITICAL ERROR!!!! {}", e.what());
+        return -1;
     } catch (...)
     {
         SPDLOG_CRITICAL("GLOBAL CRITICAL ERROR!!!!");
+        return -2;
     }
     return 0;
 }

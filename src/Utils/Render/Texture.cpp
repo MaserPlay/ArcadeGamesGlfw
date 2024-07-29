@@ -106,4 +106,5 @@ void Texture::Load() {
 
 Texture::~Texture() {
     glDeleteTextures(1, &this->initImage);
+    delete image;
 }

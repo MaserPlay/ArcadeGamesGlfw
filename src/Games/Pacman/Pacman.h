@@ -28,10 +28,10 @@ public:
 
 private:
     void loadResources();
-    bool CheckCollision(Coords c);
+    bool CheckCollision(Coords<> c);
     void Reset();
-    Coords pacmanPos;
-    std::vector<Coords> MoventGrid {};
+    Coords<> pacmanPos;
+    std::vector<Coords<>> MoventGrid {};
     Directions direction = Directions::Left;
     PacmanMap* map;
     // TEMP

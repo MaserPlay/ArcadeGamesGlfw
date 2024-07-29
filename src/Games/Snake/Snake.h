@@ -11,18 +11,17 @@
 #include "TileEngine.h"
 #include "Button.h"
 
+template<typename T=unsigned short>
+struct SnakeBody : public Coords<T>{
+    SnakeBody(unsigned int xy, Directions direction) : Coords<T>(xy), direction(direction) {}
 
+    SnakeBody(unsigned int x, unsigned int y, Directions direction) : Coords<T>(x, y), direction(direction) {}
+
+    Directions direction {};
+    std::shared_ptr<MergedRender> render {new MergedRender()};
+};
 
 class Snake : public TileEngine {
-private:
-    struct SnakeBody : public Coords{
-        SnakeBody(unsigned int xy, Directions direction) : Coords(xy), direction(direction) {}
-
-        SnakeBody(unsigned int x, unsigned int y, Directions direction) : Coords(x, y), direction(direction) {}
-
-        Directions direction {};
-        MergedRender* render = new MergedRender();
-    };
 public:
     ~Snake() override;
 
@@ -35,40 +34,40 @@ public:
     void mouse_button_callback(int button, int action, int mods) override;
 
 private:
-    void useCoordsAndTextureAndLoad(SnakeBody&, Texture*);
+    void useCoordsAndTextureAndLoad(SnakeBody<>&, std::shared_ptr<Texture>&);
     void loopPause();
     void Server();
     void loadResources();
-    void MoveSnake(SnakeBody to);
+    void MoveSnake(SnakeBody<> to);
     void Reset();
     void ResetApple();
     void SelectAndOpenMap();
-    bool OpenMap(std::string path);
-    std::deque<SnakeBody> snake {};
+    bool OpenMap(const std::string& path);
+    std::deque<SnakeBody<>> snake {};
     Directions direction = Down;
-    Coords AppleCoords;
-    SnakeMap* map;
+    Coords<> AppleCoords;
+    std::unique_ptr<SnakeMap> map;
     // TEMP
     bool Pause = false;
     float lastTickTime;
     int Score = 0;
     //AUDIO
-    Sound* Eat = new Sound();
+    std::unique_ptr<Sound> Eat {new Sound()};
     // TEXTURES
-    Texture* AngleTexture = new Texture();
-    Texture* TailTexture = new Texture();
-    Texture* HeadTexture = new Texture();
-    Texture* BodyTexture = new Texture();
-    Texture* WallTexture = new Texture();
+    std::shared_ptr<Texture> AngleTexture {new Texture()};
+    std::shared_ptr<Texture> TailTexture {new Texture()};
+    std::shared_ptr<Texture> HeadTexture {new Texture()};
+    std::shared_ptr<Texture> BodyTexture {new Texture()};
+    std::shared_ptr<Texture> WallTexture {new Texture()};
     //TEXTURE COORDS
     const std::array<glm::vec2, 4> texturecordsUp = {glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0)};
     const std::array<glm::vec2, 4> texturecordsLeft = {glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0)};
     const std::array<glm::vec2, 4> texturecordsDown = {glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0),glm::vec2(1.0, 0.0)};
     const std::array<glm::vec2, 4> texturecordsRight = {glm::vec2(1.0, 0.0),glm::vec2(0.0, 0.0),glm::vec2(0.0, 1.0),glm::vec2(1.0, 1.0)};
     // RENDER
-    MergedRender* Grid {new MergedRender()};
-    MergedRender* Apple {new MergedRender()};
-    std::vector<MergedRender*> WallsRender {};
+    std::unique_ptr<MergedRender> Grid {new MergedRender()};
+    std::unique_ptr<MergedRender> Apple {new MergedRender()};
+    std::vector<std::unique_ptr<MergedRender>> WallsRender {};
     std::vector<std::unique_ptr<MergedRender>> ScoreBuffer = {};
     //UI
     std::vector<Button> pauseButtons {};

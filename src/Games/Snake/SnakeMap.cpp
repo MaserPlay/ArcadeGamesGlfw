@@ -5,6 +5,7 @@
 #include <fstream>
 #include "SnakeMap.h"
 #include "debug.h"
+#include "Localization.h"
 
 SnakeMap* SnakeMap::load(const std::string& name) {
     auto m = new SnakeMap();
@@ -48,34 +49,13 @@ SnakeMap* SnakeMap::load(const std::string& name) {
     }
     str.close();
     //CHECK
-    if (m->getField().x <= 0 || m->getField().y <= 0)
-    {
-        SPDLOG_ERROR("field.x <= 0 || field.y <= 0"); return nullptr;
-    }
-    if (m->getDefaultSnakePos().x <= 0 || m->getDefaultSnakePos().y <= 0)
-    {
-        SPDLOG_ERROR("DefaultSnakePos.x <= 0 || DefaultSnakePos.y <= 0"); return nullptr;
-    }
-    if (m->getDefaultSnakePos().x >= m->getField().x || m->getDefaultSnakePos().y >= m->getField().y)
-    {
-        SPDLOG_ERROR("m->getDefaultSnakePos().x >= m->getField().x || m->getDefaultSnakePos().y >= m->getField().y"); return nullptr;
-    }
-    if (m->getDefaultSnakeDirection() >= DIRECTION_LAST)
-    {
-        SPDLOG_ERROR("m->getDefaultSnakeDirection() >= DIRECTION_LAST"); return nullptr;
-    }
-    if (m->getField().y != m->getField().x)
-    {
-        SPDLOG_ERROR("field.y != field.x, which is unsupported"); return nullptr;
-    }
-    if (m->getDefaultSnakeSize() < 2)
-    {
-        SPDLOG_ERROR("DefaultSnakeSize < 2"); return nullptr;
-    }
-    if (m->getTickSpeed() <= 0)
-    {
-        SPDLOG_ERROR("TickSpeed <= 0"); return nullptr;
-    }
+    SNAKE_MAP_ERROR(m->getField().x <= 0 || m->getField().y <= 0)
+    SNAKE_MAP_ERROR(m->getDefaultSnakePos().x <= 0 || m->getDefaultSnakePos().y <= 0)
+    SNAKE_MAP_ERROR(m->getDefaultSnakePos().x >= m->getField().x || m->getDefaultSnakePos().y >= m->getField().y)
+    SNAKE_MAP_ERROR(m->getDefaultSnakeDirection() >= DIRECTION_LAST)
+    SNAKE_MAP_ERROR(m->getField().y != m->getField().x)
+    SNAKE_MAP_ERROR(m->getDefaultSnakeSize() < 2)
+    SNAKE_MAP_ERROR(m->getTickSpeed() <= 0)
     return m;
 }
 

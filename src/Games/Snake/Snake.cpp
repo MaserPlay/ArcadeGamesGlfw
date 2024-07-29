@@ -4,6 +4,7 @@
 
 #include "Snake.h"
 #include <ctime>
+#include <memory>
 #include "debug.h"
 #include "Utils/System/SystemAdapter.h"
 //STB
@@ -25,11 +26,11 @@ void Snake::init() {
     SetIcon("snake_icon.png");
 
     Grid->setSpeed(MergedRender::SpeedContent::STATIC);
-    Grid->quard = new MergedRender::Quard{{1,1}, 1, 1};
+    Grid->quard.reset(new MergedRender::Quard{{1,1}, 1, 1});
 
     Apple->setFragmentShader(MergedRender::TextureFragmentShader);
     Apple->setSpeed(MergedRender::SpeedContent::DYNAMIC);
-    Apple->quard = new MergedRender::Quard{{1,1}, 1, 1, new Texture()};
+    Apple->quard.reset(new MergedRender::Quard{{1,1}, 1, 1, std::make_shared<Texture>()});
 
     UI::DarkerBackground(DarkBack);
 
@@ -55,12 +56,13 @@ void Snake::init() {
             loadMainMenu();
             return;
         }
-        map = new SnakeMap();
-        SnakeMap::save(SystemAdapter::GetGameFolderName("Snake") + "Default.smap", map);
+        map = std::make_unique<SnakeMap>();
+        SnakeMap::save(SystemAdapter::GetGameFolderName("Snake") + "Default.smap", map.get());
+        OpenMap(SystemAdapter::GetGameFolderName("Snake") + "Default.smap");
     }
 }
 
-bool Snake::OpenMap(std::string path) {
+bool Snake::OpenMap(const std::string& path) {
     if (path.empty())
     {
         return false;
@@ -71,11 +73,11 @@ bool Snake::OpenMap(std::string path) {
     {
         return false;
     } else {
-        map = m;
+        map.reset(m);
     }
     Reset();
     size_callback(getWidth(), getHeight());
-    Grid->quard = new MergedRender::Quard{{1, 1},(float) m->getField().x, (float) m->getField().y};
+    Grid->quard.reset(new MergedRender::Quard{{1, 1},(float) m->getField().x, (float) m->getField().y});
     Grid->VerticesChanged();
 
 
@@ -84,11 +86,11 @@ bool Snake::OpenMap(std::string path) {
             case SnakeMap::None:
                 break;
             case SnakeMap::Wall: {
-                auto r = new MergedRender();
+                WallsRender.emplace_back();
+                std::unique_ptr<MergedRender>& r = WallsRender.back();
                 r->setSpeed(MergedRender::SpeedContent::STATIC);
-                r->quard = new MergedRender::Quard({(i % map->getField().x) + 1,(i/map->getField().x) + 1}, 1, 1, WallTexture);
+                r->quard.reset(new MergedRender::Quard({(i % map->getField().x) + 1,(i/map->getField().x) + 1}, 1, 1, WallTexture));
                 r->load();
-                WallsRender.push_back(r);
                 break;
             }
             default:
@@ -144,7 +146,7 @@ void Snake::Reset() {
     lastTickTime = 0;
 }
 void Snake::ResetApple() {
-    AppleCoords = Coords(std::rand() % map->getField().x + 1, std::rand() % map->getField().y + 1);
+    AppleCoords = Coords<>(std::rand() % map->getField().x + 1, std::rand() % map->getField().y + 1);
     for (auto& s : snake) {
         if (AppleCoords == s)
         {
@@ -153,7 +155,7 @@ void Snake::ResetApple() {
         }
     }
     for (int i = 0; i < map->getMap().size(); ++i) {
-        if (map->getMap()[i] == SnakeMap::Wall && AppleCoords == Coords((i % map->getField().x) + 1, (i / map->getField().x) + 1)) {
+        if (map->getMap()[i] == SnakeMap::Wall && AppleCoords == Coords<>((i % map->getField().x) + 1, (i / map->getField().x) + 1)) {
             ResetApple();
             return;
         }
@@ -163,7 +165,7 @@ void Snake::ResetApple() {
 }
 
 
-void Snake::MoveSnake(SnakeBody to) {
+void Snake::MoveSnake(SnakeBody<> to) {
     auto tryTo = snake.front() + to;
     if (tryTo.x <= 0)
         tryTo.x = map->getField().x;
@@ -193,7 +195,7 @@ void Snake::MoveSnake(SnakeBody to) {
     };
     for (int i = 0; i < map->getMap().size(); ++i) {
         if (map->getMap()[i] == SnakeMap::Wall) {
-            if (CheckCollision(tryTo, Coords((i % map->getField().x) + 1,(i/map->getField().x) + 1)))
+            if (CheckCollision(tryTo, Coords<>((i % map->getField().x) + 1,(i/map->getField().x) + 1)))
             {
                 crash();
                 return;
@@ -289,14 +291,14 @@ void Snake::loop() {
     Grid->useClear();
 
     for (auto& s :snake) {
-        use(s.render);
+        s.render->use(projectionMatrix);
     }
 
     for(auto& r : WallsRender){
-        use(r);
+        r->use(projectionMatrix);
     }
 
-    use(Apple);
+    Apple->use(projectionMatrix);
     Font::RenderText(std::to_string(Score), {-.9,-.9}, UIMatrix, ScoreBuffer, .005f);
     if (Pause)
     {
@@ -373,20 +375,20 @@ void Snake::size_callback(int width, int height) {
 
 Snake::~Snake() {
     //RENDER
-    delete Grid;
-    delete Apple;
+//    delete Grid;
+//    delete Apple;
 
     //TEXTURE
-    delete HeadTexture;
-    delete BodyTexture;
-    delete AngleTexture;
-    delete TailTexture;
+//    delete HeadTexture;
+//    delete BodyTexture;
+//    delete AngleTexture;
+//    delete TailTexture;
 
     //MAP
-    delete map;
+//    delete map;
 
     //SOUNDS
-    delete Eat;
+//    delete Eat;
 }
 
 
@@ -404,11 +406,11 @@ void Snake::SelectAndOpenMap() {
     }
 }
 
-void Snake::useCoordsAndTextureAndLoad(Snake::SnakeBody & b, Texture * t) {
+void Snake::useCoordsAndTextureAndLoad(SnakeBody<> & b, std::shared_ptr<Texture>& t) {
     if (b.render->getShaderProgram() <= 0)
     {
         b.render->setFragmentShader(MergedRender::TextureFragmentShader);
-        b.render->quard = new MergedRender::Quard(b, 1, 1, t);
+        b.render->quard = std::make_unique<MergedRender::Quard>(b, 1, 1, t);
         b.render->setSpeed(MergedRender::SpeedContent::STREAM);
         b.render->load();
     } else {

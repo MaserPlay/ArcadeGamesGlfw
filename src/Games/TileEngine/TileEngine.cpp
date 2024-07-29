@@ -6,12 +6,13 @@
 #include <stb_image.h>
 #include "TileEngine.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
 
-bool TileEngine::CheckCollision(Coords c, Coords s) {
+bool TileEngine::CheckCollision(Coords<> c, Coords<> s) {
     return c == s;
 }
 
-void TileEngine::size_callback(int width, int height, const Coords screensize) {
+void TileEngine::size_callback(int width, int height, const Coords<> screensize) {
     glViewport(0,0, width, height);
     if (width >= height) {
         float Shift = (((float) width / (float) height) - ((float) screensize.x / (float) screensize.y)) * ((float) screensize.x / 2.f) - 1.f;
@@ -26,7 +27,7 @@ void TileEngine::use(MergedRender* render) {
     render->use(projectionMatrix);
 }
 
-glm::vec2 TileEngine::vector_to_screencoords(double xpos, double ypos, const Coords screensize) {
+glm::vec2 TileEngine::vector_to_screencoords(double xpos, double ypos, const Coords<> screensize) {
     if (getWidth() >= getHeight()) {
         auto Shift = (((float) getWidth() / (float) getHeight()) - ((float) screensize.x / (float) screensize.y)) * (float) (screensize.x / 2);
         return {(((xpos / getWidth())) * (screensize.x + Shift * 2) + 1) - Shift, (1 - (ypos / getHeight())) * screensize.y + 1};
@@ -48,20 +49,10 @@ void TileEngine::initEngine() {
 
 namespace TileEngineUtils::LoadResources
 {
-    void loadImage(ZipArchive* archive, const std::string &name, Texture*& texture) {
-        if (texture == NULL)
-        {
-            SPDLOG_ERROR("render == NULL");
-            return;
-        }
-        if (archive == NULL)
-        {
-            SPDLOG_ERROR("archive == NULL");
-            return;
-        }
+    void loadImage(ZipArchive& archive, const std::string &name, std::shared_ptr<Texture>& texture) {
         char *content = NULL; zip_uint64_t size;
         unsigned char *image = NULL; int width, height, nrChannels;
-        archive->get(name, content, size);
+        archive.get(name, content, size);
         if (content == NULL)
         {
             SPDLOG_WARN("{} not found", name);
@@ -70,11 +61,11 @@ namespace TileEngineUtils::LoadResources
                                           &nrChannels, 0);
             if (nrChannels == 4)
             {
-                texture = new Texture(image, width, height);
+                texture = std::make_unique<Texture>(image, width, height);
                 texture->Load();
             } else if (nrChannels == 3)
             {
-                texture = new Texture(image, width, height, Texture::Colors::RGB);
+                texture = std::make_unique<Texture>(image, width, height, Texture::Colors::RGB);
                 texture->Load();
             } else {
                 SPDLOG_WARN("{} have {} channels. What is undefined", name, nrChannels);
@@ -84,40 +75,25 @@ namespace TileEngineUtils::LoadResources
         }
     }
 
-    void loadAudio(ZipArchive* archive, const std::string &name, Sound *buffer) {
-        if (buffer == NULL)
-        {
-            SPDLOG_ERROR("render == NULL");
-            return;
-        }
-        if (archive == NULL)
-        {
-            SPDLOG_ERROR("archive == NULL");
-            return;
-        }
+    void loadAudio(ZipArchive& archive, const std::string& name, std::unique_ptr<Sound>& buffer){
         char *content = NULL; zip_uint64_t size;
-        archive->get(name, content, size);
+        archive.get(name, content, size);
         if (content == NULL) {
             SPDLOG_WARN("{} not found", name);
         } else {
-            buffer = new Sound(content, size);
+            buffer = std::make_unique<Sound>(content, size);
             SPDLOG_INFO("{} loaded", name);
         }
     }
 
-    void loadFragmentShader(ZipArchive *archive, const std::string &name, MergedRender*& render) {
+    void loadFragmentShader(ZipArchive &archive, const std::string &name, std::unique_ptr<MergedRender>& render) {
         if (render == NULL)
         {
             SPDLOG_ERROR("render == NULL");
             return;
         }
-        if (archive == NULL)
-        {
-            SPDLOG_ERROR("archive == NULL");
-            return;
-        }
         char *content = NULL; zip_uint64_t size;
-        archive->get(name, content, size);
+        archive.get(name, content, size);
         if (content == NULL)
         {
             SPDLOG_WARN("{} not found", name);
@@ -127,19 +103,14 @@ namespace TileEngineUtils::LoadResources
             SPDLOG_INFO("{} loaded", name);
         }
     }
-    void loadVertexShader(ZipArchive *archive, const std::string &name, MergedRender *render) {
+    void loadVertexShader(ZipArchive &archive, const std::string &name, std::unique_ptr<MergedRender>& render) {
         if (render == NULL)
         {
             SPDLOG_ERROR("render == NULL");
             return;
         }
-        if (archive == NULL)
-        {
-            SPDLOG_ERROR("archive == NULL");
-            return;
-        }
         char *content = NULL; zip_uint64_t size;
-        archive->get(name, content, size);
+        archive.get(name, content, size);
         if (content == NULL)
         {
             SPDLOG_WARN("{} not found", name);

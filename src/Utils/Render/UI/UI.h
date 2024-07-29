@@ -9,7 +9,7 @@
 
 namespace UI {
     glm::mat4 Matrix(int width, int height);
-    void DarkerBackground(MergedRender*);
+    void DarkerBackground(std::unique_ptr<MergedRender>&);
     glm::vec2 vector_to_uicoords(double xpos, double ypos);
 }
 

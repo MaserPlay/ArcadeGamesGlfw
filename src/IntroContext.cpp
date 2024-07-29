@@ -30,7 +30,7 @@ void IntroContext::init() {
 
     LogoRender->setFragmentShader(MergedRender::TextureFragmentShader);
     LogoRender->setSpeed(MergedRender::SpeedContent::STATIC);
-    LogoRender->quard = new MergedRender::Quard({-.7,-.5},1.4,1.4, new Texture());
+    LogoRender->quard.reset(new MergedRender::Quard({-.7,-.5},1.4,1.4, std::make_shared<Texture>()));
 
     loadResources();
     loadSnakeResources();
@@ -40,6 +40,9 @@ void IntroContext::init() {
     LogoRender->load();
 
     //INIT SNAKES
+    for (int i = 0; i < 4; ++i) {
+        Snakes.emplace_back();
+    }
     for (short i = 0; i < 9; ++i) {
         Snakes[0].emplace_back(6, i, Directions::Down);
     }
@@ -160,7 +163,7 @@ void IntroContext::loop() {
 
     for (auto& snake : Snakes) {
         for (auto& s :snake) {
-            use(s.render);
+            s.render->use(projectionMatrix);
         }
     }
 
@@ -234,11 +237,11 @@ void IntroContext::SkipIntro() {
 IntroContext::~IntroContext() {
 }
 
-void IntroContext::useCoordsAndTextureAndLoad(SnakeBodyUpdated & b, Texture * t) {
+void IntroContext::useCoordsAndTextureAndLoad(SnakeBodyUpdated & b, const std::shared_ptr<Texture>& t) {
     if (b.render->getShaderProgram() <= 0)
     {
         b.render->setFragmentShader(MergedRender::TextureFragmentShader);
-        b.render->quard = new MergedRender::Quard(b, 1, 1, t);
+        b.render->quard = std::make_unique<MergedRender::Quard>(b, 1, 1, t);
         b.render->setSpeed(MergedRender::SpeedContent::STREAM);
         b.render->load();
     } else {

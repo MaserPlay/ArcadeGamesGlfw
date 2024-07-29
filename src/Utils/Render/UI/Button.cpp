@@ -9,7 +9,7 @@
 void ButtonVBox::Init(std::vector<Button>& v) {
     unsigned short max = std::size(v);
     for (unsigned short i = 0; i < max; ++i) {
-        v[i].render->quard = new MergedRender::Quard({-.5,(2.f / (max + 1.f)) * (i + 1.f) - 1.f},1,.2);
+        v[i].render->quard.reset(new MergedRender::Quard({-.5,(2.f / (max + 1.f)) * (i + 1.f) - 1.f},1,.2));
         v[i].render->quard->color = {1.,1.,0.,1.};
         v[i].render->setSpeed(MergedRender::SpeedContent::STATIC);
         v[i].render->load();

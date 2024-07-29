@@ -12,8 +12,8 @@ glm::mat4 UI::Matrix(int width, int height) {
         return glm::ortho(-1.0, 1.0, -1.0 * ((float) height/(float) width), 1.0 * ((float) height/(float) width), -1.0, 1.0);
 }
 
-void UI::DarkerBackground(MergedRender* m) {
-    m->quard = new MergedRender::Quard({-2,-2},4,4);
+void UI::DarkerBackground(std::unique_ptr<MergedRender>& m) {
+    m->quard.reset(new MergedRender::Quard({-2,-2},4,4));
     m->quard->color = {0.,0.,0.,.5};
     m->setSpeed(MergedRender::SpeedContent::STATIC);
 }

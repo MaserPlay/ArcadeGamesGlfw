@@ -16,14 +16,14 @@
 
 class TileEngine : public BaseGame {
 protected:
-    void size_callback(int width, int height, const Coords screensize);
-    bool CheckCollision(Coords c, Coords s);
-    glm::vec2 vector_to_screencoords(double xpos, double ypos, const Coords screensize);
+    void size_callback(int width, int height, const Coords<> screensize);
+    bool CheckCollision(Coords<> c, Coords<> s);
+    glm::vec2 vector_to_screencoords(double xpos, double ypos, const Coords<> screensize);
     void use(MergedRender* render);
     glm::mat4 projectionMatrix {1};
     //UI
     glm::mat4 UIMatrix {};
-    MergedRender* DarkBack = new MergedRender();
+    std::unique_ptr<MergedRender> DarkBack {new MergedRender()};
 public:
     static void initEngine();
 };
@@ -36,10 +36,10 @@ public:
                 glfwSwapBuffers(getwindow());
 
 namespace TileEngineUtils::LoadResources{
-    void loadImage(ZipArchive* archive, const std::string& name, Texture*& texture);
-    void loadAudio(ZipArchive* archive, const std::string& name, Sound* buffer);
-    void loadVertexShader(ZipArchive* archive, const std::string& name, MergedRender* render);
-    void loadFragmentShader(ZipArchive* archive, const std::string& name, MergedRender*& render);
+    void loadImage(ZipArchive& archive, const std::string& name, std::shared_ptr<Texture>& texture);
+    void loadAudio(ZipArchive& archive, const std::string& name, std::unique_ptr<Sound>& buffer);
+    void loadVertexShader(ZipArchive& archive, const std::string& name, std::unique_ptr<MergedRender>& render);
+    void loadFragmentShader(ZipArchive& archive, const std::string& name, std::unique_ptr<MergedRender>& render);
 
 #define INIT_ARCHIVE(name) \
     SPDLOG_INFO("Start loading resources..."); \
@@ -48,8 +48,8 @@ namespace TileEngineUtils::LoadResources{
         SPDLOG_WARN("archive with resources {} not found", zippath); \
         return; \
     } \
-    auto archive = new ZipArchive(zippath);
-#define CLOSE_ARCHIVE delete archive;
+    auto archive = ZipArchive(zippath);
+#define CLOSE_ARCHIVE ;
 }
 
 #endif //ARCADEGAMES_TILEENGINE_H

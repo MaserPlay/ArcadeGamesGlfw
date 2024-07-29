@@ -10,6 +10,12 @@
 #include "vector"
 #include "Other.h"
 
+#define SNAKE_MAP_ERROR(b) \
+        if (b) \
+        { \
+        SPDLOG_WARN(#b); boxer::show(#b, _c("Snake map Error"), boxer::Style::Warning); return nullptr; \
+        }
+
 class SnakeMap final {
 public:
     SnakeMap();
@@ -18,7 +24,7 @@ public:
         None,
         Wall
     };
-    [[nodiscard]] const Coords &getField() const{
+    [[nodiscard]] const Coords<unsigned int> &getField() const{
         return field;
     }
 
@@ -34,7 +40,7 @@ public:
         return tickSpeed;
     }
 
-    [[nodiscard]] const Coords &getDefaultSnakePos() const {
+    [[nodiscard]] const Coords<> &getDefaultSnakePos() const {
         return DefaultSnakePos;
     }
 
@@ -47,11 +53,11 @@ public:
     static void save(const std::string& name, SnakeMap* map);
 
 private:
-    glm::vec<2, unsigned int> field {10};
+    Coords<unsigned int> field {10};
     unsigned short defaultSnakeSize = 4;
     std::vector<Tile> Map {};
     float tickSpeed = .4;
-    Coords DefaultSnakePos {1,1};
+    Coords<> DefaultSnakePos {1,1};
     Directions DefaultSnakeDirection = Down;
 };
 

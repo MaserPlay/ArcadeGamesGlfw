@@ -6,6 +6,7 @@
 #define ARCADEGAMES_MERGEDRENDER_H
 
 #include <glm/ext/matrix_float4x4.hpp>
+#include <utility>
 #include "Context.h"
 #include "Texture.h"
 #include "Other.h"
@@ -51,14 +52,14 @@ public:
         STREAM
     };
     struct Quard{
-        Quard(ExtendedCoords ld, float width, float height, Texture* texture = NULL) : texture(texture) { setVertices(ld,width,height);}
+        Quard(ExtendedCoords ld, float width, float height, std::shared_ptr<Texture> texture = NULL) : texture(std::move(texture)) { setVertices(ld, width, height);}
         Quard() : Quard(std::array<ExtendedCoords, 4>{}, NULL) {}
 
         inline
         void setVertices(ExtendedCoords ld, float width, float height){
             vertices = {ExtendedCoords{ld.x + width, ld.y}, {ld.x + width, ld.y + height}, {ld.x, ld.y + height}, ld};
         }
-        Texture* texture {};
+        std::shared_ptr<Texture> texture {};
         Color color {1.,1.,1.,1.};
 
         [[nodiscard]] const std::array<ExtendedCoords, 4> &getVertices() const {
@@ -69,11 +70,11 @@ public:
         /**
          * @deprecated
          */
-        explicit Quard(const std::array<ExtendedCoords, 4> &vertices, Texture* texture = NULL) : vertices(vertices),
-                                                                                        texture(texture) {}
+        explicit Quard(const std::array<ExtendedCoords, 4> &vertices, std::shared_ptr<Texture> texture = nullptr) : vertices(vertices),
+                                                                                        texture(std::move(texture)) {}
         std::array<ExtendedCoords, 4> vertices {};
     };
-    Quard* quard = new Quard();
+    std::unique_ptr<Quard> quard {new Quard()};
     void VerticesChanged();
 
     virtual ~MergedRender();

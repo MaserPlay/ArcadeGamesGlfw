@@ -40,7 +40,7 @@ void Sound::Init(const SoundFile *sf) {
 }
 
 void Sound::Play() {
-    if (source != 0) {
+    if (source > 0) {
         alSourcePlay(source);
 
         ALint state = AL_PLAYING;
@@ -52,7 +52,7 @@ void Sound::Play() {
 }
 
 Sound::~Sound() {
-    if (source != 0) {
+    if (source > 0) {
         alDeleteSources(1, &source);
         alDeleteBuffers(1, &buffer);
     }

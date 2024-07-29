@@ -16,7 +16,9 @@ enum Directions{
     Right
 };
 #define DIRECTION_LAST 5
-typedef glm::vec<2, unsigned short> Coords;
+
+template<typename T=unsigned short>
+using Coords = glm::vec<2, T>;
 typedef glm::vec2 ExtendedCoords;
 typedef glm::vec4 Color;
 

@@ -67,7 +67,7 @@ namespace Font{
                 } else {
 //                    stbi_write_bmp((std::to_string(character) + ".bmp").c_str(), face->glyph->bitmap.width, face->glyph->bitmap.rows, 2, face->glyph->bitmap.buffer);
                     auto ch = new Char(face->glyph);
-                    if (ch->getTexture()->getImage() != NULL) { m.insert({(char) character, ch}); }
+                    if (ch->getTexture()->getImage() != NULL) { m.emplace((char) character, ch); }
                 }
 
                 if (!index) break; // if FT_Get_Next_Char write 0 to index then
@@ -97,7 +97,7 @@ namespace Font{
                 {
                     v[i] = std::make_unique<MergedRender>();
                     v[i]->setFragmentShader(MergedRender::TextureFragmentShader);
-                    v[i]->quard = new MergedRender::Quard(shift, ch->getWidth() * size, (float) ch->getHeight() * size, ch->getTexture());
+                    v[i]->quard = std::make_unique<MergedRender::Quard>(shift, ch->getWidth() * size, (float) ch->getHeight() * size, ch->getTexture());
                     v[i]->setSpeed(MergedRender::SpeedContent::DYNAMIC);
                     v[i]->load();
                 } else {

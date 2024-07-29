@@ -124,32 +124,32 @@ void Pacman::loop() {
         lastTickTime = ((float) clock() / CLOCKS_PER_SEC);
         switch (direction) {
             case Up:
-                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1)))
+                if (CheckCollision(Coords<>(pacmanPos.x + 0,pacmanPos.y + 1)))
                 {
                     pacmanPos.y++;
                 }
                 break;
             case Left:
-                if (CheckCollision(Coords(pacmanPos.x + -1,pacmanPos.y + 0)))
+                if (CheckCollision(Coords<>(pacmanPos.x + -1,pacmanPos.y + 0)))
                 {
                     pacmanPos.x--;
                 }
                 break;
             case Down:
-                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1)))
+                if (CheckCollision(Coords<>(pacmanPos.x + 0,pacmanPos.y + 1)))
                 {
                     pacmanPos.y--;
                 }
                 break;
             case Right:
-                if (CheckCollision(Coords(pacmanPos.x + 1,pacmanPos.y + 0)))
+                if (CheckCollision(Coords<>(pacmanPos.x + 1,pacmanPos.y + 0)))
                 {
                     pacmanPos.x++;
                 }
                 break;
             default:
                 SPDLOG_WARN("Unknown direction");
-                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1)))
+                if (CheckCollision(Coords<>(pacmanPos.x + 0,pacmanPos.y + 1)))
                 {
                     pacmanPos.y++;
                 }
@@ -173,16 +173,16 @@ void Pacman::key_callback(int key, int scancode, int action, int mods) {
                 SwitchFullscreen();
                 break;
             case GLFW_KEY_W:
-                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1))) { direction = Directions::Up; }
+                if (CheckCollision(Coords<>(pacmanPos.x + 0,pacmanPos.y + 1))) { direction = Directions::Up; }
                 break;
             case GLFW_KEY_A:
-                if (CheckCollision(Coords(pacmanPos.x + -1,pacmanPos.y + 0))) { direction = Directions::Left; }
+                if (CheckCollision(Coords<>(pacmanPos.x + -1,pacmanPos.y + 0))) { direction = Directions::Left; }
                 break;
             case GLFW_KEY_S:
-                if (CheckCollision(Coords(pacmanPos.x + 0,pacmanPos.y + 1))) { direction = Directions::Down; }
+                if (CheckCollision(Coords<>(pacmanPos.x + 0,pacmanPos.y + 1))) { direction = Directions::Down; }
                 break;
             case GLFW_KEY_D:
-                if (CheckCollision(Coords(pacmanPos.x + 1,pacmanPos.y + 0))) { direction = Directions::Right; }
+                if (CheckCollision(Coords<>(pacmanPos.x + 1,pacmanPos.y + 0))) { direction = Directions::Right; }
                 break;
             case GLFW_KEY_O: {
                 auto path =SystemAdapter::OpenFileDialog({{"Pacman map", "pmap"}},
@@ -214,7 +214,7 @@ Pacman::~Pacman() {
     delete map;
 }
 
-bool Pacman::CheckCollision(Coords c) {
+bool Pacman::CheckCollision(Coords<> c) {
     for (auto& tile: MoventGrid) {
         if (tile == c)
         {
