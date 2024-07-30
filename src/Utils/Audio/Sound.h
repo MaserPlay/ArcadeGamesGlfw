@@ -13,19 +13,23 @@ class Sound {
 public:
     Sound() = default;
     Sound(const Sound &p) = delete;   // удаляем конструктор
-    explicit Sound(const SoundFile* file);
+    explicit Sound(SoundFile* file);
 
     explicit Sound(const std::string& filename);
 
     explicit Sound(const void* data, std::size_t sizeInBytes);
-    void Play();
+    void Play() const;
 
     virtual ~Sound();
 
+    void Load();
+
 private:
-    void Init(const SoundFile* sf);
+    //AL
     ALuint buffer = 0;
     ALuint source = 0;
+    //TEMP
+    std::unique_ptr<SoundFile> sf {new SoundFile()};
 };
 
 

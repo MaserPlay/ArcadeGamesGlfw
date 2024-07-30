@@ -373,23 +373,7 @@ void Snake::size_callback(int width, int height) {
     UIMatrix = UI::Matrix(width, height);
 }
 
-Snake::~Snake() {
-    //RENDER
-//    delete Grid;
-//    delete Apple;
-
-    //TEXTURE
-//    delete HeadTexture;
-//    delete BodyTexture;
-//    delete AngleTexture;
-//    delete TailTexture;
-
-    //MAP
-//    delete map;
-
-    //SOUNDS
-//    delete Eat;
-}
+Snake::~Snake() = default;
 
 
 void Snake::mouse_button_callback(int button, int action, int mods) {

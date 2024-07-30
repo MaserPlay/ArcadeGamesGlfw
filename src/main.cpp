@@ -143,20 +143,6 @@ void Domain(){
     SPDLOG_INFO("{} by {} v.{}", APPNAME, APPAUTHOR, APPVERSION);
     // Init GLFW
     glfwInit();
-    //Init
-    SystemAdapter::Init();
-    Localization::init();
-#ifdef _DEBUG
-    if (genlangfile) {
-        Localization::writefile();
-    }
-#endif
-    //INIT FONT LIB
-    Font::InitLib();
-    // Init OpenAl
-    Aldevice = alcOpenDevice(nullptr);
-    AlContext = alcCreateContext(Aldevice, nullptr);
-    alcMakeContextCurrent(AlContext);
 
     // Create a GLFWwindow object that we can use for GLFW's functions
     window = glfwCreateWindow(WIDTH, HEIGHT, APPNAME, nullptr, nullptr);
@@ -186,6 +172,21 @@ void Domain(){
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+
+    //Init
+    SystemAdapter::Init();
+    Localization::init();
+#ifdef _DEBUG
+    if (genlangfile) {
+        Localization::writefile();
+    }
+#endif
+    //INIT FONT LIB
+    Font::InitLib();
+    // Init OpenAl
+    Aldevice = alcOpenDevice(nullptr);
+    AlContext = alcCreateContext(Aldevice, nullptr);
+    alcMakeContextCurrent(AlContext);
     Init();
 #if defined(_DEBUG) && !defined(DO_WINMAIN)
     if (skipintro) {
@@ -239,12 +240,13 @@ void Domain(){
 #endif
 
     delete currentContext;
-    SystemAdapter::Destroy();
-    glfwTerminate();
     //OPENAL
     alcMakeContextCurrent(nullptr);
     alcDestroyContext(AlContext);
     alcCloseDevice(Aldevice);
+    // O
+    SystemAdapter::Destroy();
+    glfwTerminate();
 }
 // The MAIN function, from here we start the application and run the game loop
 #ifdef DO_WINMAIN

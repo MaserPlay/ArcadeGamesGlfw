@@ -82,6 +82,7 @@ namespace TileEngineUtils::LoadResources
             SPDLOG_WARN("{} not found", name);
         } else {
             buffer = std::make_unique<Sound>(content, size);
+            buffer->Load();
             SPDLOG_INFO("{} loaded", name);
         }
     }

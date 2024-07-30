@@ -6,24 +6,18 @@
 #include "Sound.h"
 
 Sound::Sound(const std::string &filename) {
-    auto sf = new SoundFile();
     sf->openRead(filename);
-    Init(sf);
-    delete sf;
 }
 
 Sound::Sound(const void *data, std::size_t sizeInBytes) {
-    auto sf = new SoundFile();
     sf->openRead(data, sizeInBytes);
-    Init(sf);
-    delete sf;
 }
 
-Sound::Sound(const SoundFile *file) {
-    Init(file);
+Sound::Sound(SoundFile *file) {
+    sf.reset(file);
 }
 
-void Sound::Init(const SoundFile *sf) {
+void Sound::Load() {
     ALenum format;
     if (sf->getChannelCount() == 1)
         format = AL_FORMAT_MONO16;
@@ -39,7 +33,7 @@ void Sound::Init(const SoundFile *sf) {
     alSourcei(source, AL_BUFFER, buffer);
 }
 
-void Sound::Play() {
+void Sound::Play() const {
     if (source > 0) {
         alSourcePlay(source);
 
