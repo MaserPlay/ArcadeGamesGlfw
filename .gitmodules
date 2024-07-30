@@ -1,6 +1,3 @@
-[submodule "Engine/third_party/nativefiledialog-extended"]
-	path = Engine/third_party/nativefiledialog-extended
-	url = https://github.com/btzy/nativefiledialog-extended.git
-[submodule "Engine/third_party/Boxer"]
-	path = Engine/third_party/Boxer
-	url = https://github.com/aaronmjacobs/Boxer.git
+[submodule "GameEngine"]
+	path = GameEngine
+	url = https://github.com/MaserPlay/GameEngine.git

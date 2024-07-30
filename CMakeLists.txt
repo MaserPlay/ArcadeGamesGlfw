@@ -38,7 +38,7 @@ endif()
 include_directories(${PROJECT_NAME} ${hs})
 file(GLOB cpps ${cpps})
 
-add_subdirectory(Engine)
+add_subdirectory(GameEngine)
 
 if (WIN32)
     target_compile_definitions(Boxer PRIVATE UNICODE)
