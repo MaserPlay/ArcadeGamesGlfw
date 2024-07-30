@@ -6,16 +6,16 @@
 #include <ctime>
 #include <memory>
 #include "debug.h"
-#include "Utils/System/SystemAdapter.h"
+#include "System/SystemAdapter.h"
 //STB
 //DEFINE STBI
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 //ARCHIVE
-#include "Utils/System/ZipArchive.h"
+#include "System/ZipArchive.h"
 //SOUND
-#include "Utils/System/SoundFile.hpp"
-#include "Utils/System/Localization.h"
+#include "System/SoundFile.hpp"
+#include "System/Localization.h"
 #include "UI.h"
 
 using namespace TileEngineUtils;

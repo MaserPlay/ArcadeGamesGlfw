@@ -27,8 +27,8 @@ find_package(cpr CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 
-list(APPEND cpps src/*.cpp src/Utils/*.cpp src/Games/Snake/*.cpp src/Games/TileEngine/*.cpp src/Utils/System/*.cpp src/Utils/Audio/*.cpp src/Utils/Render/*.cpp src/Utils/Render/UI/*.cpp ico.rc)
-list(APPEND hs src/ src/Games/Snake/ src/Games/TileEngine/ src/Utils/ src/Utils/System/ src/Utils/Audio/ src/Utils/Render/ src/Utils/Render/UI/)
+list(APPEND cpps src/*.cpp src/Utils/*.cpp src/Games/Snake/*.cpp src/Games/TileEngine/*.cpp ico.rc)
+list(APPEND hs src/ src/Games/Snake/ src/Games/TileEngine/ src/Utils/)
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     list(APPEND hs src/Games/Pacman/ src/Games/Test)
     list(APPEND cpps src/Games/Pacman/*.cpp src/Games/Test/*.cpp)
@@ -38,9 +38,7 @@ endif()
 include_directories(${PROJECT_NAME} ${hs})
 file(GLOB cpps ${cpps})
 
-
-add_subdirectory(third_party/Boxer)
-add_subdirectory(third_party/nativefiledialog-extended)
+add_subdirectory(Engine)
 
 if (WIN32)
     target_compile_definitions(Boxer PRIVATE UNICODE)
@@ -61,4 +59,4 @@ add_custom_command(TARGET assets POST_BUILD
 
 # LIBRARIES
 
-target_link_libraries(${PROJECT_NAME} cpr::cpr Freetype::Freetype nlohmann_json::nlohmann_json SndFile::sndfile glfw glm::glm GLEW::GLEW Boxer spdlog::spdlog nfd imgui::imgui OpenAL::OpenAL ${Stb_INCLUDE_DIR} libzip::zip)
+target_link_libraries(${PROJECT_NAME} Engine imgui::imgui)

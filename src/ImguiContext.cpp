@@ -18,12 +18,12 @@
 
 //System
 #include "typeinfo"
-#include "Utils/System/SystemAdapter.h"
+#include "System/SystemAdapter.h"
 
 //JSON
 #include "nlohmann/json.hpp"
-#include "Utils/System/Localization.h"
-#include "Utils/System/ZipArchive.h"
+#include "System/Localization.h"
+#include "System/ZipArchive.h"
 #ifdef _DEBUG
 #include "Pacman.h"
 #include "IntroContext.h"

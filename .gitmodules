@@ -1,6 +1,6 @@
-[submodule "third_party/Boxer"]
-	path = third_party/Boxer
-	url = https://github.com/aaronmjacobs/Boxer.git
-[submodule "third_party/nativefiledialog-extended"]
-	path = third_party/nativefiledialog-extended
+[submodule "Engine/third_party/nativefiledialog-extended"]
+	path = Engine/third_party/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "Engine/third_party/Boxer"]
+	path = Engine/third_party/Boxer
+	url = https://github.com/aaronmjacobs/Boxer.git

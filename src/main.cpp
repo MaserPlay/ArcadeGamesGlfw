@@ -21,14 +21,14 @@
 //MEMORY
 #include "memory"
 //OTHER
-#include "Utils/System/SystemAdapter.h"
+#include "System/SystemAdapter.h"
 //ARCHIVE
-#include "Utils/System/ZipArchive.h"
+#include "System/ZipArchive.h"
 //OTHER
 #include "debug.h"
 #include "main.h"
 #include "IntroContext.h"
-#include "Utils/System/Localization.h"
+#include "System/Localization.h"
 
 #ifdef _WINDOWS
 #include <windows.h>

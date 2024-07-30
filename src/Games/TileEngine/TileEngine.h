@@ -8,11 +8,11 @@
 
 #include "Utils/BaseGame.h"
 #include "Other.h"
-#include "Utils/Render/Texture.h"
-#include "Utils/Audio/Sound.h"
+#include "Render/Texture.h"
+#include "Audio/Sound.h"
 #include "glm/vec4.hpp"
-#include "Utils/System/ZipArchive.h"
-#include "Utils/Render/MergedRender.h"
+#include "System/ZipArchive.h"
+#include "Render/MergedRender.h"
 
 class TileEngine : public BaseGame {
 protected:

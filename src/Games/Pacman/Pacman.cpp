@@ -5,12 +5,12 @@
 #include "Pacman.h"
 #include <ctime>
 #include "debug.h"
-#include "Utils/System/SystemAdapter.h"
+#include "System/SystemAdapter.h"
 //STB
 #include "stb_image.h"
 //ARCHIVE
-#include "Utils/System/ZipArchive.h"
-#include "Utils/System/SoundFile.hpp"
+#include "System/ZipArchive.h"
+#include "System/SoundFile.hpp"
 //MAP
 #include "PacmanMap.h"
 

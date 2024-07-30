@@ -8,7 +8,7 @@
 #include "Context.h"
 #include "Utils/BaseGame.h"
 #include "string"
-#include "Utils/Render/Font.h"
+#include "Font.h"
 
 Font::Font* getFont();
 GLFWwindow* getwindow();

@@ -7,7 +7,7 @@
 
 
 #include <al.h>
-#include "Utils/System/SoundFile.hpp"
+#include "SoundFile.hpp"
 
 class Sound {
 public:

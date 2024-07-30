@@ -7,7 +7,7 @@
 
 #include "Utils/BaseGame.h"
 #include "Other.h"
-#include "Utils/Render/Texture.h"
+#include "Texture.h"
 #include "TileEngine.h"
 // OPENAL
 #include <al.h>

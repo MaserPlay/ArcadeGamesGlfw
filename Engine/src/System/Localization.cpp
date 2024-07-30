@@ -6,7 +6,7 @@
 #include <fstream>
 #include "nlohmann/json.hpp"
 #include "map"
-#include "Utils/System/SystemAdapter.h"
+#include "System/SystemAdapter.h"
 
 nlohmann::json local {};
 std::string lang = "en";

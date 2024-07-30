@@ -9,7 +9,7 @@
 #include <deque>
 #include "Context.h"
 //SOUND
-#include "Utils/Audio/Sound.h"
+#include "Audio/Sound.h"
 //Snake
 #include "Snake.h"
 

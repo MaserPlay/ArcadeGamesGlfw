@@ -6,15 +6,15 @@
 #include <ctime>
 #include <glm/ext/matrix_clip_space.hpp>
 #include "debug.h"
-#include "Utils/System/SystemAdapter.h"
+#include "System/SystemAdapter.h"
 //STB
 //DEFINE STBI
 //#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 //ARCHIVE
-#include "Utils/System/ZipArchive.h"
+#include "System/ZipArchive.h"
 //SOUND
-#include "Utils/Audio/Sound.h"
+#include "Audio/Sound.h"
 #include "UI.h"
 
 //DEFINES
