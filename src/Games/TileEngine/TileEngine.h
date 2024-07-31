@@ -7,12 +7,13 @@
 
 
 #include "Utils/BaseGame.h"
-#include "Other.h"
+#include "Engine.h"
 #include "Render/Texture.h"
 #include "Audio/Sound.h"
 #include "glm/vec4.hpp"
 #include "System/ZipArchive.h"
 #include "Render/MergedRender.h"
+#include "System.h"
 
 class TileEngine : public BaseGame {
 protected:
@@ -24,22 +25,9 @@ protected:
     //UI
     glm::mat4 UIMatrix {};
     std::unique_ptr<MergedRender> DarkBack {new MergedRender()};
-public:
-    static void initEngine();
 };
-#define START_LOOP \
-                    glfwPollEvents(); \
-                    glClearColor(0.f, 0.f, 0.f, 1.0f); \
-                    glClear(GL_COLOR_BUFFER_BIT); \
 
-#define END_LOOP \
-                glfwSwapBuffers(getwindow());
-
-namespace TileEngineUtils::LoadResources{
-    void loadImage(ZipArchive& archive, const std::string& name, std::shared_ptr<Texture>& texture);
-    void loadAudio(ZipArchive& archive, const std::string& name, std::unique_ptr<Sound>& buffer);
-    void loadVertexShader(ZipArchive& archive, const std::string& name, std::unique_ptr<MergedRender>& render);
-    void loadFragmentShader(ZipArchive& archive, const std::string& name, std::unique_ptr<MergedRender>& render);
+#define END_LOOP_G END_LOOP(getwindow());
 
 #define INIT_ARCHIVE(name) \
     SPDLOG_INFO("Start loading resources..."); \
@@ -50,6 +38,6 @@ namespace TileEngineUtils::LoadResources{
     } \
     auto archive = ZipArchive(zippath);
 #define CLOSE_ARCHIVE ;
-}
+
 
 #endif //ARCADEGAMES_TILEENGINE_H

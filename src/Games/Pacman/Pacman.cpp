@@ -13,6 +13,7 @@
 #include "System/SoundFile.hpp"
 //MAP
 #include "PacmanMap.h"
+#include "System.h"
 
 void Pacman::init() {
     glfwSetWindowTitle(getwindow(), "Pacman");
@@ -31,57 +32,11 @@ void Pacman::init() {
     }
 
     Reset();
-    TileEngine::initEngine();
     loadResources();
 }
 
 void Pacman::loadResources() {
-    SPDLOG_INFO("Start loading resources...");
-    auto zippath = SystemAdapter::GetGameFolderName("Pacman") + "Pacman_resources.zip";
-    if (!std::filesystem::is_regular_file(zippath)){
-        SPDLOG_WARN("archive with resources {} not found", zippath);
-        return;
-    }
-    auto archive = ZipArchive(zippath);
-    char *content = NULL; zip_uint64_t size; unsigned char *image = NULL;
-    int width, height, nrChannels;
-
-    auto loadImage = [&](const std::string& name, Texture*& texture){
-        archive.get(name, content, size);
-        if (content == NULL)
-        {
-            spdlog::warn("[PACMAN] " + name + " not found");
-        } else {
-            image = stbi_load_from_memory(reinterpret_cast<const unsigned char *const>(content), size, &width, &height,
-                                          &nrChannels, 0);
-            texture = new Texture(image, width, height);
-            texture->Load();
-            //SOIL_free_image_data(image);
-            spdlog::info("[PACMAN] " + name + " loaded");
-        }
-    };
-    auto loadAudio = [&](const std::string& name, ALuint& buffer){
-        archive.get(name, content, size);
-        if (content == NULL) {
-            spdlog::warn("[PACMAN] " + name + " not found");
-        } else {
-            auto sf = new SoundFile();
-            sf->openRead(content, size);
-            ALenum format;
-            if (sf->getChannelCount() == 1)
-                format = AL_FORMAT_MONO16;
-            else if (sf->getChannelCount() == 2)
-                format = AL_FORMAT_STEREO16;
-            else {
-                spdlog::error("ERROR: unrecognised wave format: {} channels", sf->getChannelCount());
-                return;
-            }
-            alGenBuffers(1, &buffer);
-            alBufferData(buffer, format, sf->getOpenAlData(), sf->getOpenAlDataSize(), sf->getSampleRate());
-            delete sf;
-            spdlog::info("[PACMAN] " + name + " loaded");
-        }
-    };
+    INIT_ARCHIVE("Pacman")
 
 }
 

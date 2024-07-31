@@ -175,7 +175,7 @@ void Domain(){
 
     //Init
     SystemAdapter::Init();
-    Localization::init();
+    Localization::init(SystemAdapter::GetGameFolderName("Localization")  + "lang.lang");
 #ifdef _DEBUG
     if (genlangfile) {
         Localization::writefile();
@@ -212,7 +212,7 @@ void Domain(){
     {
         ErrorThrow("currentContext == NULL")
     }
-    TileEngine::initEngine();
+    initEngine();
     // gldefault
 
     // Game loop
@@ -235,7 +235,7 @@ void Domain(){
     SPDLOG_DEBUG("Closing...");
 #ifdef _DEBUG
     if (genlangfile) {
-        Localization::genfile();
+        Localization::genfile(SystemAdapter::GetGameFolderName("Localization")  + "lang.lang");
     }
 #endif
 

@@ -28,9 +28,9 @@ void IntroContext::init() {
 
     Grid->setSpeed(MergedRender::SpeedContent::STATIC);
 
-    LogoRender->setFragmentShader(MergedRender::TextureFragmentShader);
+    LogoRender->setFragmentShader(Shaders::TextureFragmentShader);
     LogoRender->setSpeed(MergedRender::SpeedContent::STATIC);
-    LogoRender->quard.reset(new MergedRender::Quard({-.7,-.5},1.4,1.4, std::make_shared<Texture>()));
+    LogoRender->quard.reset(new ExtendedQuard({-.7,-.5},1.4,1.4, std::make_shared<Texture>()));
 
     loadResources();
     loadSnakeResources();
@@ -61,7 +61,7 @@ void IntroContext::init() {
 void IntroContext::loadResources() {
     INIT_ARCHIVE("Intro")
 
-    TileEngineUtils::LoadResources::loadImage(archive, "logo.png", LogoRender->quard->texture);
+    LoadResources::loadImage(archive, "logo.png", LogoRender->quard->texture);
 
     CLOSE_ARCHIVE
 }
@@ -69,11 +69,11 @@ void IntroContext::loadResources() {
 void IntroContext::loadSnakeResources() {
     INIT_ARCHIVE("Snake")
 
-    TileEngineUtils::LoadResources::loadImage(archive, "body_angle.png", AngleTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "tail.png", TailTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "head.png", HeadTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "body.png", BodyTexture);
-    TileEngineUtils::LoadResources::loadFragmentShader(archive, "chess.frag", Grid);
+    LoadResources::loadImage(archive, "body_angle.png", AngleTexture);
+    LoadResources::loadImage(archive, "tail.png", TailTexture);
+    LoadResources::loadImage(archive, "head.png", HeadTexture);
+    LoadResources::loadImage(archive, "body.png", BodyTexture);
+    LoadResources::loadFragmentShader(archive, "chess.frag", Grid);
 
     CLOSE_ARCHIVE
 }
@@ -172,7 +172,7 @@ void IntroContext::loop() {
     if ((int) (((float) clock() / CLOCKS_PER_SEC) - StartTime)%2==1)
     {
         auto size = .009f;
-        Font::RenderText("Present", {(float) Font::TextWidth("Present") * -size / 2,-.8}, UIMatrix, PresentsBuffer, size);
+        Font::RenderText("Present", getFont(), {(float) Font::TextWidth("Present", getFont()) * -size / 2,-.8}, UIMatrix, PresentsBuffer, size);
     }
 
     if (StartTime + IntroDuration <= ((float) clock() / CLOCKS_PER_SEC))
@@ -181,7 +181,7 @@ void IntroContext::loop() {
         SkipIntro();
     }
 
-    END_LOOP
+    END_LOOP_G
     Server();
 }
 
@@ -225,7 +225,7 @@ void IntroContext::size_callback(int width, int height) {
         screensize.y = modifi * ((float) height / (float) width) + 1;
         projectionMatrix = glm::ortho((double) -modifi, (double) modifi, (double) -modifi * ((double) height/(double) width), (double) modifi * ((double) height/(double) width));
     }
-    Grid->quard->setVertices({-screensize},screensize.x * 2, screensize.y * 2);
+    Grid->quard.reset(new ExtendedQuard({-screensize},screensize.x * 2, screensize.y * 2));
     Grid->VerticesChanged();
     UIMatrix = UI::Matrix(width, height);
 }
@@ -240,12 +240,12 @@ IntroContext::~IntroContext() {
 void IntroContext::useCoordsAndTextureAndLoad(SnakeBodyUpdated & b, const std::shared_ptr<Texture>& t) {
     if (b.render->getShaderProgram() <= 0)
     {
-        b.render->setFragmentShader(MergedRender::TextureFragmentShader);
-        b.render->quard = std::make_unique<MergedRender::Quard>(b, 1, 1, t);
+        b.render->setFragmentShader(Shaders::TextureFragmentShader);
+        b.render->quard = std::make_unique<ExtendedQuard>(b, 1, 1, t);
         b.render->setSpeed(MergedRender::SpeedContent::STREAM);
         b.render->load();
     } else {
-        b.render->quard->setVertices(b, 1, 1);
+        b.render->quard.reset(new ExtendedQuard(b,1,1,t));
         b.render->quard->texture = t;
         b.render->VerticesChanged();
     }

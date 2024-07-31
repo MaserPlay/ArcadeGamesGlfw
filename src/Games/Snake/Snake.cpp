@@ -4,12 +4,11 @@
 
 #include "Snake.h"
 #include <ctime>
-#include <memory>
 #include "debug.h"
 #include "System/SystemAdapter.h"
 //STB
 //DEFINE STBI
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 //ARCHIVE
 #include "System/ZipArchive.h"
@@ -17,20 +16,20 @@
 #include "System/SoundFile.hpp"
 #include "System/Localization.h"
 #include "UI.h"
-
-using namespace TileEngineUtils;
-
+#include "System.h"
+#include "TileEngine.h"
 
 void Snake::init() {
     glfwSetWindowTitle(getwindow(), "Snake");
     SetIcon("snake_icon.png");
 
     Grid->setSpeed(MergedRender::SpeedContent::STATIC);
-    Grid->quard.reset(new MergedRender::Quard{{1,1}, 1, 1});
 
-    Apple->setFragmentShader(MergedRender::TextureFragmentShader);
+    Grid->quard.reset(new ExtendedQuard{{1,1}, 1, 1});
+
+    Apple->setFragmentShader(Shaders::TextureFragmentShader);
     Apple->setSpeed(MergedRender::SpeedContent::DYNAMIC);
-    Apple->quard.reset(new MergedRender::Quard{{1,1}, 1, 1, std::make_shared<Texture>()});
+    Apple->quard.reset(new ExtendedQuard{{1,1}, 1, 1, std::make_shared<Texture>()});
 
     UI::DarkerBackground(DarkBack);
 
@@ -77,7 +76,7 @@ bool Snake::OpenMap(const std::string& path) {
     }
     Reset();
     size_callback(getWidth(), getHeight());
-    Grid->quard.reset(new MergedRender::Quard{{1, 1},(float) m->getField().x, (float) m->getField().y});
+    Grid->quard.reset(new ExtendedQuard{{1, 1},(float) m->getField().x, (float) m->getField().y});
     Grid->VerticesChanged();
 
 
@@ -89,7 +88,7 @@ bool Snake::OpenMap(const std::string& path) {
                 WallsRender.emplace_back();
                 std::unique_ptr<MergedRender>& r = WallsRender.back();
                 r->setSpeed(MergedRender::SpeedContent::STATIC);
-                r->quard.reset(new MergedRender::Quard({(i % map->getField().x) + 1,(i/map->getField().x) + 1}, 1, 1, WallTexture));
+                r->quard.reset(new ExtendedQuard({(i % map->getField().x) + 1,(i/map->getField().x) + 1}, 1, 1, WallTexture));
                 r->load();
                 break;
             }
@@ -105,14 +104,14 @@ bool Snake::OpenMap(const std::string& path) {
 void Snake::loadResources() {
     INIT_ARCHIVE("Snake")
 
-    TileEngineUtils::LoadResources::loadImage(archive, "apple.png", Apple->quard->texture);
-    TileEngineUtils::LoadResources::loadImage(archive, "body_angle.png", AngleTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "tail.png", TailTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "head.png", HeadTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "body.png", BodyTexture);
-    TileEngineUtils::LoadResources::loadImage(archive, "wall.png", WallTexture);
-    TileEngineUtils::LoadResources::loadAudio(archive, "eat.wav", Eat);
-    TileEngineUtils::LoadResources::loadFragmentShader(archive, "chess.frag", Grid);
+    LoadResources::loadImage(archive, "apple.png", Apple->quard->texture);
+    LoadResources::loadImage(archive, "body_angle.png", AngleTexture);
+    LoadResources::loadImage(archive, "tail.png", TailTexture);
+    LoadResources::loadImage(archive, "head.png", HeadTexture);
+    LoadResources::loadImage(archive, "body.png", BodyTexture);
+    LoadResources::loadImage(archive, "wall.png", WallTexture);
+    LoadResources::loadAudio(archive, "eat.wav", Eat);
+    LoadResources::loadFragmentShader(archive, "chess.frag", Grid);
 
     CLOSE_ARCHIVE
 }
@@ -160,7 +159,7 @@ void Snake::ResetApple() {
             return;
         }
     }
-    Apple->quard->setVertices(AppleCoords, 1, 1);
+    Apple->quard = std::make_unique<ExtendedQuard>(AppleCoords, 1, 1);
     Apple->VerticesChanged();
 }
 
@@ -299,13 +298,13 @@ void Snake::loop() {
     }
 
     Apple->use(projectionMatrix);
-    Font::RenderText(std::to_string(Score), {-.9,-.9}, UIMatrix, ScoreBuffer, .005f);
+    Font::RenderText(std::to_string(Score), getFont(), {-.9f,-.9f}, UIMatrix, ScoreBuffer, .005f);
     if (Pause)
     {
         loopPause();
     }
 
-    END_LOOP
+    END_LOOP_G
 }
 
 void Snake::Server() {
@@ -336,7 +335,7 @@ void Snake::Server() {
 
 void Snake::loopPause() {
     DarkBack->use(UIMatrix);
-    ButtonVBox::Show(pauseButtons, UIMatrix);
+    ButtonVBox::Show(pauseButtons, getFont(), UIMatrix);
 }
 
 void Snake::key_callback(int key, int scancode, int action, int mods) {
@@ -393,12 +392,12 @@ void Snake::SelectAndOpenMap() {
 void Snake::useCoordsAndTextureAndLoad(SnakeBody<> & b, std::shared_ptr<Texture>& t) {
     if (b.render->getShaderProgram() <= 0)
     {
-        b.render->setFragmentShader(MergedRender::TextureFragmentShader);
-        b.render->quard = std::make_unique<MergedRender::Quard>(b, 1, 1, t);
+        b.render->setFragmentShader(Shaders::TextureFragmentShader);
+        b.render->quard = std::make_unique<ExtendedQuard>(b, 1, 1, t);
         b.render->setSpeed(MergedRender::SpeedContent::STREAM);
         b.render->load();
     } else {
-        b.render->quard->setVertices(b, 1, 1);
+        b.render->quard = std::make_unique<ExtendedQuard>(b, 1, 1);
         b.render->quard->texture = t;
         b.render->VerticesChanged();
     }
